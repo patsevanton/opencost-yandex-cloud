@@ -15,9 +15,9 @@ resource "yandex_dns_zone" "apatsev-org-ru" {
   private_networks = [yandex_vpc_network.opencost.id]
 }
 
-resource "yandex_dns_recordset" "victoriametrics" {
+resource "yandex_dns_recordset" "grafana" {
   zone_id = yandex_dns_zone.apatsev-org-ru.id
-  name    = "victoriametrics.apatsev.org.ru."
+  name    = "grafana.apatsev.org.ru."
   type    = "A"
   ttl     = 200
   data    = [yandex_vpc_address.addr.external_ipv4_address[0].address]

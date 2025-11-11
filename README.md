@@ -13,12 +13,11 @@
 
 2. Установите VictoriaMetrics Stack с включенным Ingress:
    ```console
-   helm install victoriametrics vm/victoria-metrics-k8s-stack \
-     --namespace monitoring \
-     --create-namespace \
-     --set vmsingle.ingress.enabled=true \
-     --set vmsingle.ingress.hosts[0].host=victoriametrics.apatsev.org.ru \
-     --set vmsingle.ingress.ingressClassName=nginx
+    helm upgrade --install --wait \
+        vmks vm/victoria-metrics-k8s-stack \
+        --namespace vmks --create-namespace \
+        --version 0.63.5 \
+        --values vmks-values.yaml
    ```
 
 3. Настройте DNS запись для домена `victoriametrics.apatsev.org.ru`, указав IP-адрес вашего Ingress контроллера.

@@ -1,0 +1,6 @@
+grafana:
+  ingress:
+    ingressClassName: nginx
+    enabled: true
+    hosts:
+      - grafana.apatsev.org.ru
