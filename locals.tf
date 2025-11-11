@@ -28,7 +28,7 @@ resource "random_password" "postgres" {
   min_upper   = 4
 }
 
-resource "random_password" "sentry_admin_password" {
+resource "random_password" "opencost_admin_password" {
   length      = 20
   special     = false
   min_numeric = 4
@@ -36,16 +36,16 @@ resource "random_password" "sentry_admin_password" {
 }
 
 locals {
-  folder_id           = data.yandex_client_config.client.folder_id
-  sentry_admin_password = random_password.sentry_admin_password.result
-  kafka_user          = "sentry"
-  kafka_password      = random_password.kafka.result
-  clickhouse_user     = "sentry"
-  clickhouse_password = random_password.clickhouse.result
-  redis_password      = random_password.redis.result
-  postgres_password   = random_password.postgres.result
-  filestore_bucket    = "sentry-bucket-apatsev-filestore-test"
-  nodestore_bucket    = "sentry-bucket-apatsev-nodestore-test"
+  folder_id            = data.yandex_client_config.client.folder_id
+  opencost_admin_password = random_password.opencost_admin_password.result
+  kafka_user           = "opencost"
+  kafka_password       = random_password.kafka.result
+  clickhouse_user      = "opencost"
+  clickhouse_password  = random_password.clickhouse.result
+  redis_password       = random_password.redis.result
+  postgres_password    = random_password.postgres.result
+  filestore_bucket     = "opencost-bucket-apatsev-filestore-test"
+  nodestore_bucket     = "opencost-bucket-apatsev-nodestore-test"
 }
 
 output "generated_passwords" {

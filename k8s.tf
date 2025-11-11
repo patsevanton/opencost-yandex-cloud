@@ -18,16 +18,16 @@ resource "time_sleep" "wait_sa" {
   ]
 }
 
-resource "yandex_kubernetes_cluster" "sentry" {
-  name       = "sentry"
+resource "yandex_kubernetes_cluster" "opencost" {
+  name       = "opencost"
   folder_id  = coalesce(local.folder_id, data.yandex_client_config.client.folder_id)
-  network_id = yandex_vpc_network.sentry.id
+  network_id = yandex_vpc_network.opencost.id
 
   master {
     version = "1.30"
     zonal {
-      zone      = yandex_vpc_subnet.sentry-a.zone
-      subnet_id = yandex_vpc_subnet.sentry-a.id
+      zone      = yandex_vpc_subnet.opencost-a.zone
+      subnet_id = yandex_vpc_subnet.opencost-a.id
     }
 
     public_ip = true
@@ -44,7 +44,7 @@ resource "yandex_kubernetes_cluster" "sentry" {
 resource "yandex_kubernetes_node_group" "k8s-node-group" {
   description = "Node group for the Managed Service for Kubernetes cluster"
   name        = "k8s-node-group"
-  cluster_id  = yandex_kubernetes_cluster.sentry.id
+  cluster_id  = yandex_kubernetes_cluster.opencost.id
   version     = "1.30"
 
   scale_policy {
@@ -54,9 +54,9 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
   }
 
   allocation_policy {
-    location { zone = yandex_vpc_subnet.sentry-a.zone }
-    location { zone = yandex_vpc_subnet.sentry-b.zone }
-    location { zone = yandex_vpc_subnet.sentry-d.zone }
+    location { zone = yandex_vpc_subnet.opencost-a.zone }
+    location { zone = yandex_vpc_subnet.opencost-b.zone }
+    location { zone = yandex_vpc_subnet.opencost-d.zone }
   }
 
   instance_template {
@@ -65,9 +65,9 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
     network_interface {
       nat = true
       subnet_ids = [
-        yandex_vpc_subnet.sentry-a.id,
-        yandex_vpc_subnet.sentry-b.id,
-        yandex_vpc_subnet.sentry-d.id
+        yandex_vpc_subnet.opencost-a.id,
+        yandex_vpc_subnet.opencost-b.id,
+        yandex_vpc_subnet.opencost-d.id
       ]
     }
 
@@ -85,8 +85,8 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
 provider "helm" {
   kubernetes {
-    host                   = yandex_kubernetes_cluster.sentry.master[0].external_v4_endpoint
-    cluster_ca_certificate = yandex_kubernetes_cluster.sentry.master[0].cluster_ca_certificate
+    host                   = yandex_kubernetes_cluster.opencost.master[0].external_v4_endpoint
+    cluster_ca_certificate = yandex_kubernetes_cluster.opencost.master[0].cluster_ca_certificate
 
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
@@ -103,7 +103,7 @@ resource "helm_release" "ingress_nginx" {
   version          = "4.10.6"
   namespace        = "ingress-nginx"
   create_namespace = true
-  depends_on       = [yandex_kubernetes_cluster.sentry]
+  depends_on       = [yandex_kubernetes_cluster.opencost]
 
   set {
     name  = "controller.service.loadBalancerIP"
@@ -112,5 +112,5 @@ resource "helm_release" "ingress_nginx" {
 }
 
 output "k8s_cluster_credentials_command" {
-  value = "yc managed-kubernetes cluster get-credentials --id ${yandex_kubernetes_cluster.sentry.id} --external --force"
+  value = "yc managed-kubernetes cluster get-credentials --id ${yandex_kubernetes_cluster.opencost.id} --external --force"
 }
