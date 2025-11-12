@@ -6,6 +6,9 @@ opencost:
       port: 8481
       path: "/select/0/prometheus"
       scheme: http
+  pricing:
+    loadBalancer:
+      cost: 0.025  # Default cost per hour for LoadBalancer
   ui:
     ingress:
       enabled: true
