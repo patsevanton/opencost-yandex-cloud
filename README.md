@@ -35,21 +35,15 @@
    helm repo update
    ```
 
-2. Получите дефолтные values-файлы:
+2. Установите OpenCost используя подготовленный файл значений:
    ```console
-   helm show values opencost/opencost > default-opencost-values.yaml
-   helm show values vm/victoria-metrics-k8s-stack > default-vmks-values.yaml
-   ```
-
-4. Установите OpenCost с включенным Ingress для домена opencost.apatsev.org.ru:
-   ```console
-   helm install opencost opencost/opencost \
+   helm upgrade --install --wait \
+     opencost opencost/opencost \
      --namespace opencost \
      --create-namespace \
-     --set opencost.ui.ingress.enabled=true \
-     --set opencost.ui.ingress.hosts[0].host=opencost.apatsev.org.ru \
-     --set opencost.ui.ingress.hosts[0].paths[0].path=/ \
-     --set opencost.ui.ingress.ingressClassName=nginx
+     --values opencost-values.yaml
    ```
 
-После установки OpenCost будет доступен по адресу: http://opencost.apatsev.org.ru
+3. После установки OpenCost будет доступен:
+   - По адресу: https://opencost.apatsev.org.ru (с TLS-шифрованием)
+   - Через Ingress контроллер NGINX
