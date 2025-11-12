@@ -1,16 +1,16 @@
-prometheus:
-  internal:
-    serviceName: vmselect-vmks-victoria-metrics-k8s-stack
-    namespaceName: vmks
-    port: 8481
-    path: "/select/0/prometheus"
-    scheme: http
-ui:
-  ingress:
-    enabled: true
-    ingressClassName: "nginx"
-    hosts:
+opencost:
+  prometheus:
+    internal:
+      serviceName: vmselect-vmks-victoria-metrics-k8s-stack
+      namespaceName: vmks
+      port: 8481
+      path: "/select/0/prometheus"
+      scheme: http
+  ui:
+    ingress:
+      enabled: true
+      ingressClassName: "nginx"
+      hosts:
       - host: opencost.apatsev.org.ru
         paths:
-          - path: /
-            pathType: Prefix
+        - /
