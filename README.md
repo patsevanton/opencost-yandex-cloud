@@ -11,7 +11,12 @@
    helm repo update
    ```
 
-2. Установите VictoriaMetrics Stack с включенным Ingress:
+2. Получите дефолтные values-файлы:
+   ```console
+   helm show values vm/victoria-metrics-k8s-stack > default-vmks-values.yaml
+   ```
+
+3. Установите VictoriaMetrics Stack с включенным Ingress:
    ```console
     helm upgrade --install --wait \
         vmks vm/victoria-metrics-k8s-stack \
@@ -33,6 +38,7 @@
 2. Получите дефолтные values-файлы:
    ```console
    helm show values opencost/opencost > default-opencost-values.yaml
+   helm show values vm/victoria-metrics-k8s-stack > default-vmks-values.yaml
    ```
 
 4. Установите OpenCost с включенным Ingress для домена opencost.apatsev.org.ru:
