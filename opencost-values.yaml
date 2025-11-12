@@ -2,22 +2,14 @@ nameOverride: ""
 fullnameOverride: ""
 namespaceOverride: ""
 clusterName: "cluster.local"
-
 prometheus:
   internal:
-    
     enabled: true
-    
     serviceName: vmselect-vmks-victoria-metrics-k8s-stack
-    
     namespaceName: vmks
-    
     port: 8481
-    
     path: "/select/0/prometheus"
-    
     scheme: http
-
 ui:
   enabled: true
   ingress:
@@ -34,20 +26,17 @@ ui:
       - secretName: opencost-tls
         hosts:
           - opencost.apatsev.org.ru
-
 exporter:
   image:
     tag: "1.118.0@sha256:c1a08767fe3c3b2964a75885c145bae0cba32225c0b4c1e0382a77566aef93e9"
   resources:
     requests:
-      cpu: '10m'
-      memory: '55Mi'
+      cpu: "10m"
+      memory: "55Mi"
     limits:
-      memory: '1Gi'
-
+      memory: "1Gi"
 service:
   type: ClusterIP
   annotations: {}
-
 rbac:
   enabled: true
