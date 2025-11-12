@@ -20,8 +20,6 @@
         --values vmks-values.yaml
    ```
 
-3. Настройте DNS запись для домена `victoriametrics.apatsev.org.ru`, указав IP-адрес вашего Ingress контроллера.
-
 ## Установка OpenCost
 
 Для установки OpenCost в кластер Kubernetes выполните следующие шаги:
@@ -32,7 +30,12 @@
    helm repo update
    ```
 
-2. Установите OpenCost с включенным Ingress для домена opencost.apatsev.org.ru:
+2. Получите дефолтные values-файлы:
+   ```console
+   helm show values opencost/opencost > default-opencost-values.yaml
+   ```
+
+4. Установите OpenCost с включенным Ingress для домена opencost.apatsev.org.ru:
    ```console
    helm install opencost opencost/opencost \
      --namespace opencost \
