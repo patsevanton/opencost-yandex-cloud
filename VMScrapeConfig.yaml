@@ -1,0 +1,12 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMScrapeConfig
+metadata:
+  name: opencost-scrape
+  namespace: vmks
+spec:
+  staticConfigs:
+  - targets: [opencost.opencost:9003]
+  relabelConfigs:
+  - sourceLabels: [__address__]
+    targetLabel: job
+    replacement: opencost
