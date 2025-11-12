@@ -6,9 +6,12 @@ opencost:
       port: 8481
       path: "/select/0/prometheus"
       scheme: http
-  pricing:
-    loadBalancer:
-      cost: 0.025  # Default cost per hour for LoadBalancer
+  customPricing:
+    enabled: true
+    costModel:  
+      LBIngressDataCost: "0.01"
+      FirstFiveForwardingRulesCost: "0.0"
+      AdditionalForwardingRuleCost: "0.0"
   ui:
     ingress:
       enabled: true
