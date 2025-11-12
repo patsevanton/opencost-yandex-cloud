@@ -1,6 +1,63 @@
+global:
+  clusterLabel: cluster
+  license:
+    key: ""
+  cluster:
+    dnsDomain: cluster.local.
+
+victoria-metrics-operator:
+  enabled: true
+
+vmsingle:
+  enabled: false
+
+vmcluster:
+  enabled: true
+  spec:
+    retentionPeriod: "1"
+    replicationFactor: 2
+    vmstorage:
+      replicaCount: 2
+      storageDataPath: /vm-data
+      storage:
+        volumeClaimTemplate:
+          spec:
+            resources:
+              requests:
+                storage: 10Gi
+    vmselect:
+      enabled: true
+      replicaCount: 2
+      cacheMountPath: /select-cache
+      storage:
+        volumeClaimTemplate:
+          spec:
+            resources:
+              requests:
+                storage: 2Gi
+    vminsert:
+      enabled: true
+      replicaCount: 2
+
+alertmanager:
+  enabled: true
+
+vmalert:
+  enabled: true
+
+vmagent:
+  enabled: true
+
 grafana:
+  enabled: true
   ingress:
     ingressClassName: nginx
     enabled: true
     hosts:
       - grafana.apatsev.org.ru
+
+prometheus-node-exporter:
+  enabled: true
+
+kube-state-metrics:
+  enabled: true
