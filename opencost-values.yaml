@@ -36,6 +36,12 @@ opencost:
 
   # Веб-интерфейс OpenCost.
   ui:
+    # Таймауты nginx при проксировании запросов к cost-model (allocation/compute и др.).
+    # Без увеличения при тяжёлых запросах браузер может закрыть соединение (499).
+    nginx:
+      proxyConnectTimeout: 300
+      proxySendTimeout: 300
+      proxyReadTimeout: 300
     ingress:
       enabled: true
       ingressClassName: "nginx"

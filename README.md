@@ -35,6 +35,19 @@ helm upgrade --install --wait \
       --values vmks-values.yaml
 ```
 
+### Ресурсы VictoriaMetrics Stack
+
+Чарт по умолчанию выставляет адекватные requests/limits для кластера из 3 нод. Текущее потребление обычно далеко от лимитов:
+
+| Компонент   | Limits (по умолчанию) | Типичное потребление |
+|------------|------------------------|------------------------|
+| vmselect   | 500m CPU, 1Gi RAM      | ~50m CPU, ~50Mi RAM   |
+| vmstorage  | 1 CPU, 1.5Gi RAM       | ~40m CPU, ~200–250Mi  |
+| vminsert   | 500m CPU, 500Mi RAM    | ~10m CPU, ~60Mi       |
+| vmagent    | 200m CPU, 500Mi RAM    | ~20m CPU, ~50Mi       |
+
+Если запросы OpenCost к VictoriaMetrics тормозят или таймаутят, можно в `vmks-values.yaml` увеличить лимиты для **vmselect** (он обрабатывает PromQL-запросы). OOM и нехватки ресурсов при текущей конфигурации не наблюдается.
+
 ## Установка OpenCost
 
 Для установки OpenCost в кластер Kubernetes выполните следующие шаги:
@@ -59,6 +72,19 @@ helm upgrade --install --wait \
    - по адресу http://opencost.apatsev.org.ru;
    - через Ingress-контроллер NGINX (HTTP).
 
+## Устранение неполадок
+
+**Страница долго крутится или запрос обрывается (499)**  
+Запросы allocation к VictoriaMetrics (особенно окно 7 дней) могут выполняться 1–2 минуты. Ingress и UI-прокси настроены на таймаут 300 с. Если браузер обрывает запрос раньше:
+- откройте с окном «Сегодня» для быстрой загрузки: http://opencost.apatsev.org.ru/?window=today ;
+- убедитесь, что применён скрейп метрик OpenCost (`kubectl apply -f opencost-vmscrapeconfig.yaml`), иначе данных для расчёта нет.
+
+**Проверка логов и здоровья**  
+```bash
+kubectl -n opencost logs -l app.kubernetes.io/name=opencost -c opencost --tail=50
+kubectl -n opencost get pods
+```
+
 ## Скрейпинг метрик OpenCost (vmagent)
 
 OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results». Если проверка в кластере в порядке (имена сервисов и доступ к VictoriaMetrics), чаще всего причина именно в отсутствии этого скрейпа.
@@ -72,7 +98,7 @@ kubectl apply -f opencost-vmscrapeconfig.yaml
 
 В OpenCost встроен MCP-сервер (Model Context Protocol). Он предоставляет инструменты для запроса данных о стоимости кластера: AI-ассистенты (например, Cursor) могут через MCP получать cost-метрики и отвечать на вопросы о расходах.
 
-MCP доступен по отдельному поддомену. Добавьте сервер в настройки MCP (например, в Cursor):
+MCP доступен по отдельному поддомену. Добавьте сервер в настройки MCP:
 
 ```json
 {
