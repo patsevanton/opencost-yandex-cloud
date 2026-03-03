@@ -45,5 +45,5 @@
    ```
 
 3. После установки OpenCost будет доступен:
-   - По адресу: https://opencost.apatsev.org.ru (с TLS-шифрованием)
-   - Через Ingress контроллер NGINX
+   - По адресу: http://opencost.apatsev.org.ru
+   - Через Ingress контроллер NGINX (HTTP)

@@ -53,6 +53,8 @@ grafana:
   ingress:
     ingressClassName: nginx
     enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
     hosts:
       - grafana.apatsev.org.ru
 
