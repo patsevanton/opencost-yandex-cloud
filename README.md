@@ -59,11 +59,11 @@ helm upgrade --install --wait \
    - по адресу http://opencost.apatsev.org.ru;
    - через Ingress-контроллер NGINX (HTTP).
 
-## Почему OpenCost показывает "No results"
+## Скрейпинг метрик OpenCost (vmagent)
 
-Если проверка в кластере в порядке (имена сервисов и доступ к VictoriaMetrics), то **главная причина** обычно такая: OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results».
+OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results». Если проверка в кластере в порядке (имена сервисов и доступ к VictoriaMetrics), чаще всего причина именно в отсутствии этого скрейпа.
 
-**Что сделать:** добавить OpenCost в scrape vmagent (обязательно). В репозитории есть манифест `opencost-vmscrapeconfig.yaml` — примените его после установки VMKS и OpenCost:
+Для этого примените `opencost-vmscrapeconfig.yaml` после установки VMKS и OpenCost:
 ```bash
 kubectl apply -f opencost-vmscrapeconfig.yaml
 ```
