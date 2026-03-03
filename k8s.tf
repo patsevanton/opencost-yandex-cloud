@@ -24,7 +24,7 @@ resource "yandex_kubernetes_cluster" "opencost" {
   network_id = yandex_vpc_network.opencost.id
 
   master {
-    version = "1.30"
+    version = "1.32"
     zonal {
       zone      = yandex_vpc_subnet.opencost-a.zone
       subnet_id = yandex_vpc_subnet.opencost-a.id
@@ -45,7 +45,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
   description = "Node group for the Managed Service for Kubernetes cluster"
   name        = "k8s-node-group"
   cluster_id  = yandex_kubernetes_cluster.opencost.id
-  version     = "1.30"
+  version     = "1.32"
 
   scale_policy {
     fixed_scale {
