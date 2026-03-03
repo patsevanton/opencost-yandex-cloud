@@ -112,15 +112,15 @@ resource "helm_release" "ingress_nginx" {
 
   set {
     name  = "controller.config.proxy-connect-timeout"
-    value = "300"
+    value = "600"
   }
   set {
     name  = "controller.config.proxy-read-timeout"
-    value = "300"
+    value = "600"
   }
   set {
     name  = "controller.config.proxy-send-timeout"
-    value = "300"
+    value = "600"
   }
 }
 

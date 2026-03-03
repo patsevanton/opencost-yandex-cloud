@@ -19,6 +19,10 @@ vmcluster:
       enabled: true
       replicaCount: 2
       cacheMountPath: /select-cache
+      # Расширенное логирование входящих запросов (в т.ч. от OpenCost) для отладки 502.
+      extraArgs:
+        loggerLevel: "INFO"
+        search.logSlowQueryDuration: "1s"
       storage:
         volumeClaimTemplate:
           spec:

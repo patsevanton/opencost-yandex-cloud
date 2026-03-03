@@ -21,12 +21,7 @@ helm repo add vm https://victoriametrics.github.io/helm-charts/
 helm repo update
 ```
 
-2. Сохраните values по умолчанию (опционально, для справки):
-```bash
-helm show values vm/victoria-metrics-k8s-stack > default-vmks-values.yaml
-```
-
-3. Установите VictoriaMetrics Stack с включённым Ingress:
+2. Установите VictoriaMetrics Stack с включённым Ingress:
 ```bash
 helm upgrade --install --wait \
       vmks vm/victoria-metrics-k8s-stack \
@@ -34,19 +29,6 @@ helm upgrade --install --wait \
       --version 0.72.2 \
       --values vmks-values.yaml
 ```
-
-### Ресурсы VictoriaMetrics Stack
-
-Чарт по умолчанию выставляет адекватные requests/limits для кластера из 3 нод. Текущее потребление обычно далеко от лимитов:
-
-| Компонент   | Limits (по умолчанию) | Типичное потребление |
-|------------|------------------------|------------------------|
-| vmselect   | 500m CPU, 1Gi RAM      | ~50m CPU, ~50Mi RAM   |
-| vmstorage  | 1 CPU, 1.5Gi RAM       | ~40m CPU, ~200–250Mi  |
-| vminsert   | 500m CPU, 500Mi RAM    | ~10m CPU, ~60Mi       |
-| vmagent    | 200m CPU, 500Mi RAM    | ~20m CPU, ~50Mi       |
-
-Если запросы OpenCost к VictoriaMetrics тормозят или таймаутят, можно в `vmks-values.yaml` увеличить лимиты для **vmselect** (он обрабатывает PromQL-запросы). OOM и нехватки ресурсов при текущей конфигурации не наблюдается.
 
 ### Пароль admin Grafana
 
@@ -57,6 +39,17 @@ kubectl get secret vmks-grafana -n vmks -o jsonpath="{.data.admin-password}" | b
 ```
 
 Grafana доступна по адресу http://grafana.apatsev.org.ru (см. `vmks-values.yaml`).
+
+## Prometheus Operator CRD (ServiceMonitor)
+
+Ресурс **ServiceMonitor** — это CRD из Prometheus Operator (`monitoring.coreos.com`). Он нужен, чтобы OpenCost создал ServiceMonitor для скрейпа своих метрик. VictoriaMetrics Stack при установке обычно уже ставит эти CRD. Если вы ставите OpenCost в кластер без VMKS или CRD в кластере нет, установите только CRD:
+
+Либо через OCI:
+```bash
+helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds --namespace kube-system --version 27.0.0
+```
+
+После появления CRD в кластере чарт OpenCost сможет создать ServiceMonitor.
 
 ## Установка OpenCost
 
@@ -74,7 +67,7 @@ helm upgrade --install --wait \
    opencost opencost/opencost \
    --namespace opencost \
    --create-namespace \
-   --version 2.5.9 \
+   --version 2.3.0 \
    --values opencost-values.yaml
 ```
 
@@ -87,7 +80,7 @@ helm upgrade --install --wait \
 **Страница долго крутится или запрос обрывается (499)**  
 Запросы allocation к VictoriaMetrics (особенно окно 7 дней) могут выполняться 1–2 минуты. Ingress и UI-прокси настроены на таймаут 300 с. Если браузер обрывает запрос раньше:
 - откройте с окном «Сегодня» для быстрой загрузки: http://opencost.apatsev.org.ru/?window=today ;
-- убедитесь, что применён скрейп метрик OpenCost (`kubectl apply -f opencost-vmscrapeconfig.yaml`), иначе данных для расчёта нет.
+- убедитесь, что ServiceMonitor OpenCost включён в `opencost-values.yaml` и vmagent (VictoriaMetrics) скрейпит namespace `opencost`, иначе данных для расчёта нет.
 
 **Проверка логов и здоровья**  
 ```bash
@@ -97,12 +90,9 @@ kubectl -n opencost get pods
 
 ## Скрейпинг метрик OpenCost (vmagent)
 
-OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results». Если проверка в кластере в порядке (имена сервисов и доступ к VictoriaMetrics), чаще всего причина именно в отсутствии этого скрейпа.
+OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results».
 
-Для этого примените `opencost-vmscrapeconfig.yaml` после установки VMKS и OpenCost:
-```bash
-kubectl apply -f opencost-vmscrapeconfig.yaml
-```
+В `opencost-values.yaml` включён **ServiceMonitor** (Prometheus Operator CRD). Чарт OpenCost создаёт ServiceMonitor в namespace `opencost`. Убедитесь, что VMAgent в VictoriaMetrics Stack настроен на обнаружение ServiceMonitor в namespace `opencost` (например, через `serviceMonitorNamespaceSelector` или по умолчанию — все namespace).
 
 ## Подключение MCP OpenCost
 
