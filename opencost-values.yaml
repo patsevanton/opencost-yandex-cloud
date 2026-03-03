@@ -31,6 +31,9 @@ opencost:
       ingressClassName: "nginx"
       annotations:
         nginx.ingress.kubernetes.io/ssl-redirect: "false"
+        # Allocation/report API queries VictoriaMetrics and can take >60s; default proxy-read-timeout causes 504
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
       hosts:
       - host: opencost.apatsev.org.ru
         paths:
