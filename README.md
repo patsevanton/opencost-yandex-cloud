@@ -58,3 +58,31 @@ helm upgrade --install --wait \
 3. После установки OpenCost будет доступен:
    - По адресу: http://opencost.apatsev.org.ru
    - Через Ingress контроллер NGINX (HTTP)
+
+## Почему OpenCost показывает "No results"
+
+Проверка в кластере (имена сервисов и доступ к VM — в порядке). **Главная причина**: OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VM; иначе в TSDB нет cost-метрик и UI показывает "No results".
+
+1. **Добавить OpenCost в scrape vmagent** (обязательно). В репозитории есть отдельный манифест `opencost-vmscrapeconfig.yaml` — примените его после установки VMKS и OpenCost:
+```bash
+kubectl apply -f opencost-vmscrapeconfig.yaml
+```
+
+## Подключение MCP OpenCost
+
+В OpenCost встроен MCP-сервер (Model Context Protocol). Он предоставляет инструменты для запроса данных о стоимости кластера — AI-ассистенты (например, Cursor) могут через MCP получать cost-метрики и отвечать на вопросы о расходах.
+
+MCP доступен по отдельному поддомену. Добавьте сервер в настройки MCP (например, в Cursor):
+
+```json
+{
+  "mcpServers": {
+    "opencost": {
+      "type": "http",
+      "url": "http://mcp-opencost.apatsev.org.ru"
+    }
+  }
+}
+```
+
+Документация: [OpenCost MCP](https://opencost.io/docs/integrations/mcp/).
