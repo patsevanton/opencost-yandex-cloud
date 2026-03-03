@@ -18,11 +18,11 @@
 
 3. Установите VictoriaMetrics Stack с включенным Ingress:
    ```console
-    helm upgrade --install --wait \
-        vmks vm/victoria-metrics-k8s-stack \
-        --namespace vmks --create-namespace \
-        --version 0.63.5 \
-        --values vmks-values.yaml
+   helm upgrade --install --wait \
+       vmks vm/victoria-metrics-k8s-stack \
+       --namespace vmks --create-namespace \
+       --version 0.72.2 \
+       --values vmks-values.yaml
    ```
 
 ## Установка OpenCost
@@ -41,6 +41,7 @@
      opencost opencost/opencost \
      --namespace opencost \
      --create-namespace \
+     --version 2.5.9 \
      --values opencost-values.yaml
    ```
 
