@@ -1,7 +1,15 @@
 # opencost-yandex-cloud
 Тестирование opencost в yandex cloud
 
-VictoriaMetrics обязателен.
+
+## Зачем OpenCost нужен Prometheus-совместимый TSDB
+
+OpenCost сам не собирает и не хранит метрики. Для расчёта стоимости ему нужна внешняя база временных рядов с Prometheus API, откуда он читает:
+
+- **node-exporter** — использование CPU, памяти, диска на нодах;
+- **kube-state-metrics** — запросы/лимиты подов, PVC, состояние нод.
+
+На основе этих метрик OpenCost строит cost-модель и свои метрики (например `node_cpu_hourly_cost`, `container_cpu_allocation`). Запросы за прошлые периоды (день, месяц) выполняются через PromQL по уже сохранённым данным в TSDB. Без Prometheus-совместимого хранилища OpenCost не из чего считать стоимость. В этом репозитории в качестве TSDB используется VictoriaMetrics (совместим с Prometheus API).
 
 ## Установка VictoriaMetrics Stack
 
