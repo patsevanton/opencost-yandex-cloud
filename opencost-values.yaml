@@ -39,6 +39,7 @@
 
       ui:
         enabled: true
+        modelFqdn: "localhost:9003" # Обход проблемы hairpin NAT в Yandex Cloud K8s: nginx проксирует через localhost вместо ClusterIP
         ingress:
           enabled: true
           ingressClassName: "nginx"
@@ -54,7 +55,8 @@
           hosts:
           - host: mcp-opencost.apatsev.org.ru
             paths:
-            - /
+            - path: /
+              pathType: Prefix
       metrics:
         serviceMonitor:
           enabled: true
