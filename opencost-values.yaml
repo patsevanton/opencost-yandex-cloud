@@ -1,4 +1,8 @@
+# OpenCost — учёт стоимости ресурсов в Kubernetes (Yandex Cloud).
+# Values для Helm-чарта opencost.
+
 opencost:
+  # MCP (Model Context Protocol) — сервер для доступа к данным OpenCost через AI/агентов.
   mcp:
     enabled: true
     port: 8081
@@ -12,6 +16,8 @@ opencost:
         paths:
         - path: /
           pathType: Prefix
+
+  # Подключение к метрикам: используем внутренний VictoriaMetrics (vmselect) в namespace vmks.
   prometheus:
     internal:
       serviceName: vmselect-vmks-victoria-metrics-k8s-stack
@@ -19,19 +25,23 @@ opencost:
       port: 8481
       path: "/select/0/prometheus"
       scheme: http
+
+  # Свои тарифы для компонентов Yandex Cloud (балансировщик, правила маршрутизации и т.д.).
   customPricing:
     enabled: true
-    costModel:  
+    costModel:
       LBIngressDataCost: "0.01"
       FirstFiveForwardingRulesCost: "0.0"
       AdditionalForwardingRuleCost: "0.0"
+
+  # Веб-интерфейс OpenCost.
   ui:
     ingress:
       enabled: true
       ingressClassName: "nginx"
       annotations:
         nginx.ingress.kubernetes.io/ssl-redirect: "false"
-        # Allocation/report API queries VictoriaMetrics and can take >60s; default proxy-read-timeout causes 504
+        # Запросы allocation/report к VictoriaMetrics могут занимать >60 с; без увеличения таймаута — 504.
         nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
         nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
       hosts:
