@@ -1,7 +1,25 @@
 # OpenCost — учёт стоимости ресурсов в Kubernetes (Yandex Cloud).
 # Values для Helm-чарта opencost.
 
+loglevel: debug
+
 opencost:
+  # Сроки хранения и окна расчёта (в чарте 2.5 задаются отдельно от extraEnv)
+  retention1d: 15   # RESOLUTION_1D_RETENTION — дневное разрешение (дни)
+  retention1h: 49   # RESOLUTION_1H_RETENTION — часовое разрешение (часы)
+  cloudCost:
+    enabled: false
+    monthToDateInterval: 6   # CLOUD_COST_MONTH_TO_DATE_INTERVAL
+    refreshRateHours: 6     # CLOUD_COST_REFRESH_RATE_HOURS
+    queryWindowDays: 7      # CLOUD_COST_QUERY_WINDOW_DAYS
+    runWindowDays: 3        # CLOUD_COST_RUN_WINDOW_DAYS
+
+  exporter:
+    extraEnv:
+      CLOUD_PROVIDER: DEFAULT               # Провайдер облака по умолчанию
+      KUBECOST_SCRAPE_INTERVAL: 60m         # Интервал сбора метрик Kubecost (минуты)
+      USE_CUSTOM_PROVIDER: "true"           # Использовать кастомного облачного провайдера
+
   # MCP (Model Context Protocol) — сервер для доступа к данным OpenCost через AI/агентов.
   mcp:
     enabled: true
@@ -26,13 +44,19 @@ opencost:
       path: "/select/0/prometheus"
       scheme: http
 
-  # Свои тарифы для компонентов Yandex Cloud (балансировщик, правила маршрутизации и т.д.).
+  # Свои тарифы для компонентов Yandex Cloud (CPU, RAM, диск, сеть, балансировщик и т.д.).
   customPricing:
     enabled: true
     costModel:
+      CPU: 1.2852                      # ₽ за 1 vCPU-час
+      RAM: 0.3348                      # ₽ за 1 ГБ RAM-час
+      storage: 0.0179                  # ₽ за 1 ГБ SSD-час
       LBIngressDataCost: "0.01"
       FirstFiveForwardingRulesCost: "0.0"
       AdditionalForwardingRuleCost: "0.0"
+      zoneNetworkEgress: 1.6524        # ₽ за 1 ГБ исходящего трафика
+      regionNetworkEgress: 1.6524
+      internetNetworkEgress: 1.6524
 
   # Веб-интерфейс OpenCost.
   ui:
