@@ -17,7 +17,7 @@ opencost:
   exporter:
     extraEnv:
       CLOUD_PROVIDER: DEFAULT               # Провайдер облака по умолчанию
-      KUBECOST_SCRAPE_INTERVAL: 60m         # Интервал сбора метрик Kubecost (минуты)
+      KUBECOST_SCRAPE_INTERVAL: 5m         # Интервал сбора метрик Kubecost (минуты)
       USE_CUSTOM_PROVIDER: "true"           # Использовать кастомного облачного провайдера
 
   # MCP (Model Context Protocol) — сервер для доступа к данным OpenCost через AI/агентов.

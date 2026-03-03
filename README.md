@@ -48,6 +48,16 @@ helm upgrade --install --wait \
 
 Если запросы OpenCost к VictoriaMetrics тормозят или таймаутят, можно в `vmks-values.yaml` увеличить лимиты для **vmselect** (он обрабатывает PromQL-запросы). OOM и нехватки ресурсов при текущей конфигурации не наблюдается.
 
+### Пароль admin Grafana
+
+Grafana входит в VictoriaMetrics Stack. Логин по умолчанию: `admin`. Пароль хранится в секрете Kubernetes:
+
+```bash
+kubectl get secret vmks-grafana -n vmks -o jsonpath="{.data.admin-password}" | base64 -d; echo
+```
+
+Grafana доступна по адресу http://grafana.apatsev.org.ru (см. `vmks-values.yaml`).
+
 ## Установка OpenCost
 
 Для установки OpenCost в кластер Kubernetes выполните следующие шаги:
