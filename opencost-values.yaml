@@ -1,108 +1,62 @@
-# OpenCost — учёт стоимости ресурсов в Kubernetes (Yandex Cloud).
-# Values для Helm-чарта opencost. Устанавливать с --version 2.3.0.
+    opencost:
+      exporter:
+        defaultClusterId: "test"
+        extraEnv:
+          RESOLUTION_1D_RETENTION:              15      # Срок хранения данных с дневным разрешением (дни)
+          RESOLUTION_1H_RETENTION:              49      # Срок хранения данных с часовым разрешением (часы)
+          CLOUD_COST_MONTH_TO_DATE_INTERVAL:    6       # Интервал для расчета затрат за месяц (дни)
+          CLOUD_COST_REFRESH_RATE_HOURS:        1       # Частота обновления данных о расходах (часы)
+          CLOUD_COST_QUERY_WINDOW_DAYS:         7       # Окно запроса данных о расходах (дни)
+          CLOUD_COST_RUN_WINDOW_DAYS:           3       # Окно запуска процессов расчета расходов (дни)
+          CLOUD_PROVIDER:                       DEFAULT # Провайдер облака по умолчанию
+          KUBECOST_SCRAPE_INTERVAL:             5m     # Интервал сбора метрик Kubecost (минуты)
+          PROM_CLUSTER_ID_LABEL:                cluster # Метка кластера для Prometheus
+          USE_CUSTOM_PROVIDER:                  true    # Использовать кастомного облачного провайдера
+      prometheus:
+        external:
+          enabled: true
+          url: http://vmselect-vmks-victoria-metrics-k8s-stack.vmks.svc.cluster.local:8481/select/0/prometheus
+        internal:
+          enabled: false
+          serviceName: vmselect-vmks-victoria-metrics-k8s-stack
+          namespaceName: vmks
+          port: 8481
+          path: "/select/0/prometheus"
+          scheme: http
+      customPricing:
+        enabled: true
+        provider: custom
+        costModel:
+          CPU: 1.2852                 # ₽ за 1 vCPU-час:contentReference[oaicite:7]{index=7}
+          RAM: 0.3348                 # ₽ за 1 ГБ RAM-час:contentReference[oaicite:8]{index=8}
+          storage: 0.0179             # ₽ за 1 ГБ SSD-час (12.8628 ₽/720 ч):contentReference[oaicite:9]{index=9}
+          LBIngressDataCost: "0.01"
+          FirstFiveForwardingRulesCost: "0.0"
+          AdditionalForwardingRuleCost: "0.0"
+          zoneNetworkEgress: 1.6524   # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:10]{index=10}
+          regionNetworkEgress: 1.6524 # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:11]{index=11}
+          internetNetworkEgress: 1.6524 # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:12]{index=12}
 
-loglevel: debug
-
-opencost:
-  # Сроки хранения и окна расчёта (в чарте 2.5 задаются отдельно от extraEnv)
-  retention1d: 15   # RESOLUTION_1D_RETENTION — дневное разрешение (дни)
-  retention1h: 49   # RESOLUTION_1H_RETENTION — часовое разрешение (часы)
-  cloudCost:
-    enabled: false
-    monthToDateInterval: 6   # CLOUD_COST_MONTH_TO_DATE_INTERVAL
-    refreshRateHours: 6     # CLOUD_COST_REFRESH_RATE_HOURS
-    queryWindowDays: 7      # CLOUD_COST_QUERY_WINDOW_DAYS
-    runWindowDays: 3        # CLOUD_COST_RUN_WINDOW_DAYS
-
-  exporter:
-    defaultClusterId: "dev"
-    resources:
-      requests:
-        cpu: "2000m"
-        memory: "2Gi"
-      limits:
-        cpu: "3000m"
-        memory: "4Gi"
-    extraEnv:
-      RESOLUTION_1D_RETENTION: "15"        # Срок хранения данных с дневным разрешением (дни)
-      RESOLUTION_1H_RETENTION: "49"        # Срок хранения данных с часовым разрешением (часы)
-      CLOUD_COST_MONTH_TO_DATE_INTERVAL: "6"
-      CLOUD_COST_REFRESH_RATE_HOURS: "6"
-      CLOUD_COST_QUERY_WINDOW_DAYS: "7"
-      CLOUD_COST_RUN_WINDOW_DAYS: "3"
-      CLOUD_PROVIDER: DEFAULT
-      KUBECOST_SCRAPE_INTERVAL: 60m        # Как в рабочем конфиге (минуты)
-      PROM_CLUSTER_ID_LABEL: cluster
-      USE_CUSTOM_PROVIDER: "true"
-
-  # MCP (Model Context Protocol) — сервер для доступа к данным OpenCost через AI/агентов.
-  mcp:
-    enabled: true
-    port: 8081
-    ingress:
-      enabled: true
-      ingressClassName: "nginx"
-      annotations:
-        nginx.ingress.kubernetes.io/ssl-redirect: "false"
-      hosts:
-      - host: mcp-opencost.apatsev.org.ru
-        paths:
-        - path: /
-          pathType: Prefix
-
-  # ServiceMonitor для сбора метрик OpenCost (VictoriaMetrics/Prometheus Operator).
-  metrics:
-    serviceMonitor:
-      enabled: true
-      namespace: ""   # в том же namespace, что и opencost
-      scrapeInterval: 30s
-      scrapeTimeout: 10s
-      honorLabels: true
-
-  # Подключение к метрикам: как в рабочем конфиге — external URL (снижает риск 502 из‑за discovery).
-  prometheus:
-    external:
-      enabled: true
-      url: http://vmselect-vmks-victoria-metrics-k8s-stack.vmks.svc.cluster.local:8481/select/0/prometheus
-    internal:
-      enabled: false
-      serviceName: vmselect-vmks-victoria-metrics-k8s-stack
-      namespaceName: vmks
-      port: 8481
-      path: "/select/0/prometheus"
-      scheme: http
-
-  # Свои тарифы для компонентов Yandex Cloud (CPU, RAM, диск, сеть, балансировщик и т.д.).
-  customPricing:
-    enabled: true
-    costModel:
-      CPU: 1.2852                      # ₽ за 1 vCPU-час
-      RAM: 0.3348                      # ₽ за 1 ГБ RAM-час
-      storage: 0.0179                  # ₽ за 1 ГБ SSD-час
-      LBIngressDataCost: "0.01"
-      FirstFiveForwardingRulesCost: "0.0"
-      AdditionalForwardingRuleCost: "0.0"
-      zoneNetworkEgress: 1.6524        # ₽ за 1 ГБ исходящего трафика
-      regionNetworkEgress: 1.6524
-      internetNetworkEgress: 1.6524
-
-  # Веб-интерфейс OpenCost.
-  ui:
-    # Таймауты nginx при проксировании запросов к cost-model (allocation/compute и др.).
-    # Без увеличения при тяжёлых запросах браузер может закрыть соединение (499).
-    nginx:
-      proxyConnectTimeout: 300
-      proxySendTimeout: 300
-      proxyReadTimeout: 300
-    ingress:
-      enabled: true
-      ingressClassName: "nginx"
-      annotations:
-        nginx.ingress.kubernetes.io/ssl-redirect: "false"
-        # Запросы allocation/report к VictoriaMetrics могут занимать >60 с; без увеличения таймаута — 504.
-        nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
-        nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
-      hosts:
-      - host: opencost.apatsev.org.ru
-        paths:
-        - /
+      ui:
+        enabled: true
+        ingress:
+          enabled: true
+          ingressClassName: "nginx"
+          hosts:
+          - host: opencost.apatsev.org.ru
+            paths:
+            - /
+      mcp:
+        enabled: true
+        ingress:
+          enabled: true
+          ingressClassName: "nginx"
+          hosts:
+          - host: mcp-opencost.apatsev.org.ru
+            paths:
+            - /
+      metrics:
+        serviceMonitor:
+          enabled: true
+          namespace: opencost
+          interval: 10m
