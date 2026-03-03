@@ -1,13 +1,3 @@
-global:
-  clusterLabel: cluster
-  license:
-    key: ""
-  cluster:
-    dnsDomain: cluster.local.
-
-victoria-metrics-operator:
-  enabled: true
-
 vmsingle:
   enabled: false
 
@@ -39,17 +29,7 @@ vmcluster:
       enabled: true
       replicaCount: 2
 
-alertmanager:
-  enabled: true
-
-vmalert:
-  enabled: true
-
-vmagent:
-  enabled: true
-
 grafana:
-  enabled: true
   ingress:
     ingressClassName: nginx
     enabled: true
@@ -57,9 +37,3 @@ grafana:
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
     hosts:
       - grafana.apatsev.org.ru
-
-prometheus-node-exporter:
-  enabled: true
-
-kube-state-metrics:
-  enabled: true
