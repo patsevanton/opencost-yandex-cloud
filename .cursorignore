@@ -5,7 +5,6 @@
 .terraform.lock.hcl
 LICENSE
 ip-dns.tf
-k8s.tf
 locals.tf
 net.tf
 terraform.tfstate

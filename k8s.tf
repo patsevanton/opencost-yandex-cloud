@@ -109,6 +109,19 @@ resource "helm_release" "ingress_nginx" {
     name  = "controller.service.loadBalancerIP"
     value = yandex_vpc_address.addr.external_ipv4_address[0].address
   }
+
+  set {
+    name  = "controller.config.proxy-connect-timeout"
+    value = "300"
+  }
+  set {
+    name  = "controller.config.proxy-read-timeout"
+    value = "300"
+  }
+  set {
+    name  = "controller.config.proxy-send-timeout"
+    value = "300"
+  }
 }
 
 output "k8s_cluster_credentials_command" {
