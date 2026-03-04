@@ -1,0 +1,24 @@
+# ConfigMap для custom pricing OpenCost.
+# Имя должно совпадать с opencost.customPricing.configmapName (по умолчанию custom-pricing-model).
+# OpenCost ожидает плоские ключи в data, а не один JSON-файл (см. opencost/opencost-helm-chart#240).
+# Для CPU, RAM, Storage при загрузке из ConfigMap OpenCost делит значение на 730 (считает ставки месячными),
+# поэтому указываем месячные ставки: почасовая_ставка * 730.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-pricing-model
+  namespace: opencost
+data:
+  provider: "custom"
+  description: "Yandex Cloud тарифы (₽)"
+  # Месячные ставки (₽/мес за единицу), OpenCost переведёт в почасовые делением на 730:
+  CPU: "938.196"      # 1.2852 ₽/vCPU-час * 730
+  RAM: "244.404"      # 0.3348 ₽/ГБ-час * 730
+  storage: "13.067"   # 0.0179 ₽/ГБ-час * 730
+  # Сетевой egress — за 1 ГБ, без деления на 730:
+  zoneNetworkEgress: "1.6524"
+  regionNetworkEgress: "1.6524"
+  internetNetworkEgress: "1.6524"
+  LBIngressDataCost: "0.01"
+  FirstFiveForwardingRulesCost: "0.0"
+  AdditionalForwardingRuleCost: "0.0"
