@@ -17,7 +17,7 @@ Prometheus Operator CRD нужен для ServiceMonitor OpenCost: чарт Open
 
 Либо через OCI:
 ```bash
-helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds --namespace kube-system --version 27.0.0
+helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/prometheus-operator-crds --namespace kube-system --wait --version 27.0.0
 ```
 
 После появления CRD в кластере чарт OpenCost сможет создать ServiceMonitor.
@@ -72,23 +72,11 @@ helm upgrade --install --wait \
 ```
 
 3. После установки OpenCost будет доступен:
-   - по адресу http://opencost.apatsev.org.ru;
-   - через Ingress-контроллер NGINX (HTTP).
+  - по адресу http://opencost.apatsev.org.ru;
+  - через Ingress-контроллер NGINX (HTTP).
 
-## Устранение неполадок
 
-**Страница долго крутится или запрос обрывается (499)**  
-Запросы allocation к VictoriaMetrics (особенно окно 7 дней) могут выполняться 1–2 минуты. Ingress и UI-прокси настроены на таймаут 300 с. Если браузер обрывает запрос раньше:
-- откройте с окном «Сегодня» для быстрой загрузки: http://opencost.apatsev.org.ru/?window=today ;
-- убедитесь, что ServiceMonitor OpenCost включён в `opencost-values.yaml` и vmagent (VictoriaMetrics) скрейпит namespace `opencost`, иначе данных для расчёта нет.
-
-**Проверка логов и здоровья**  
-```bash
-kubectl -n opencost logs -l app.kubernetes.io/name=opencost -c opencost --tail=50
-kubectl -n opencost get pods
-```
-
-## Скрейпинг метрик OpenCost (vmagent)
+## Скрейпинг метрик OpenCost
 
 OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent’ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results».
 
