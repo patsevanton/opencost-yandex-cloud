@@ -14,10 +14,9 @@
           USE_CUSTOM_PROVIDER:                  true    # Использовать кастомного облачного провайдера
       prometheus:
         external:
-          enabled: true
-          url: http://vmsingle-vmks-victoria-metrics-k8s-stack.vmks.svc.cluster.local:8428
-        internal:
           enabled: false
+        internal:
+          enabled: true
           serviceName: vmsingle-vmks-victoria-metrics-k8s-stack
           namespaceName: vmks
           port: 8428
