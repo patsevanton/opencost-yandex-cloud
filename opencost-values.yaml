@@ -13,15 +13,10 @@
           PROM_CLUSTER_ID_LABEL:                cluster # Метка кластера для Prometheus
           USE_CUSTOM_PROVIDER:                  true    # Использовать кастомного облачного провайдера
       prometheus:
-        external:
-          enabled: false
         internal:
-          enabled: true
           serviceName: vmsingle-vmks-victoria-metrics-k8s-stack
           namespaceName: vmks
           port: 8428
-          path: ""
-          scheme: http
       customPricing:
         enabled: true
         provider: custom
@@ -37,7 +32,6 @@
           internetNetworkEgress: 1.6524 # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:12]{index=12}
 
       ui:
-        enabled: true
         modelFqdn: "localhost:9003" # Обход проблемы hairpin NAT в Yandex Cloud K8s: nginx проксирует через localhost вместо ClusterIP
         ingress:
           enabled: true
@@ -47,7 +41,6 @@
             paths:
             - /
       mcp:
-        enabled: true
         ingress:
           enabled: true
           ingressClassName: "nginx"
