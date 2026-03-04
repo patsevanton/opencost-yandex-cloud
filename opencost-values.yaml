@@ -15,13 +15,13 @@
       prometheus:
         external:
           enabled: true
-          url: http://vmselect-vmks-victoria-metrics-k8s-stack.vmks.svc.cluster.local:8481/select/0/prometheus
+          url: http://vmsingle-vmks-victoria-metrics-k8s-stack.vmks.svc.cluster.local:8428
         internal:
           enabled: false
-          serviceName: vmselect-vmks-victoria-metrics-k8s-stack
+          serviceName: vmsingle-vmks-victoria-metrics-k8s-stack
           namespaceName: vmks
-          port: 8481
-          path: "/select/0/prometheus"
+          port: 8428
+          path: ""
           scheme: http
       customPricing:
         enabled: true

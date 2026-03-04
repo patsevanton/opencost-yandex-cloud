@@ -34,7 +34,7 @@ helm repo update
 
 2. Установите VictoriaMetrics Stack с включённым Ingress:
 ```bash
-helm upgrade --install --wait \
+helm upgrade --install --wait --timeout 10m \
       vmks vm/victoria-metrics-k8s-stack \
       --namespace vmks --create-namespace \
       --version 0.72.2 \
