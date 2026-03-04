@@ -83,12 +83,13 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
   }
 }
 
+
 provider "helm" {
-  kubernetes {
+  kubernetes = {
     host                   = yandex_kubernetes_cluster.opencost.master[0].external_v4_endpoint
     cluster_ca_certificate = yandex_kubernetes_cluster.opencost.master[0].cluster_ca_certificate
 
-    exec {
+    exec = {
       api_version = "client.authentication.k8s.io/v1beta1"
       args        = ["k8s", "create-token"]
       command     = "yc"
@@ -98,17 +99,31 @@ provider "helm" {
 
 resource "helm_release" "ingress_nginx" {
   name             = "ingress-nginx"
-  repository       = "https://kubernetes.github.io/ingress-nginx"
-  chart            = "ingress-nginx"
-  version          = "4.11.8"
+  chart            = "oci://cr.yandex/yc-marketplace/yandex-cloud/ingress-nginx/chart/ingress-nginx"
+  version          = "4.13.0"
   namespace        = "ingress-nginx"
   create_namespace = true
-  depends_on       = [yandex_kubernetes_cluster.opencost]
 
-  set {
-    name  = "controller.service.loadBalancerIP"
-    value = yandex_vpc_address.addr.external_ipv4_address[0].address
-  }
+  depends_on = [
+    yandex_kubernetes_cluster.opencost
+  ]
+
+  values = [
+    yamlencode({
+      controller = {
+        service = {
+          loadBalancerIP = yandex_vpc_address.addr.external_ipv4_address[0].address
+        }
+        config = {
+          log-format-escape-json = "true"
+          log-format-upstream = trimspace(<<-EOT
+            {"ts":"$time_iso8601","http":{"request_id":"$req_id","method":"$request_method","status_code":$status,"url":"$host$request_uri","host":"$host","uri":"$request_uri","request_time":$request_time,"user_agent":"$http_user_agent","protocol":"$server_protocol","trace_session_id":"$http_trace_session_id","server_protocol":"$server_protocol","content_type":"$sent_http_content_type","bytes_sent":"$bytes_sent"},"nginx":{"x-forward-for":"$proxy_add_x_forwarded_for","remote_addr":"$proxy_protocol_addr","http_referrer":"$http_referer"}}
+          EOT
+          )
+        }
+      }
+    })
+  ]
 }
 
 output "k8s_cluster_credentials_command" {

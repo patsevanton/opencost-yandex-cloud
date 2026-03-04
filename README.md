@@ -67,7 +67,7 @@ helm upgrade --install --wait \
    opencost opencost/opencost \
    --namespace opencost \
    --create-namespace \
-   --version 2.3.0 \
+   --version 2.5.9 \
    --values opencost-values.yaml
 ```
 
