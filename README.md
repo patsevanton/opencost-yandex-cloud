@@ -8,7 +8,6 @@
 - **Стек на базе VictoriaMetrics** — использовать VictoriaMetrics как Prometheus-совместимую TSDB для OpenCost вместо отдельного Prometheus.
 - **Кастомные цены** — задавать тарифы через ConfigMap и обходить ограничения Helm-чарта OpenCost в формате цен.
 - **Интеграция с мониторингом** — скрейпить cost-метрики OpenCost в VictoriaMetrics и смотреть их в Grafana.
-- **MCP для AI-ассистентов** — подключать OpenCost по MCP (Cursor и др.) для запросов о стоимости через естественный язык.
 
 ## Что такое OpenCost
 
@@ -89,42 +88,62 @@ helm upgrade --install --wait \
 
 4. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
 
+## Стоимость по командам (team cost)
+
+OpenCost позволяет группировать расходы по командам, даже если у команды несколько namespace. Для этого используется агрегация по Kubernetes-лейблу через параметр `aggregate=label:<имя_лейбла>`.
+
+### Настройка
+
+**1. Добавьте лейбл `team` на workload-ресурсы** (pods, deployments, daemonsets) во всех namespace команды:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: team-a-backend
+spec:
+  template:
+    metadata:
+      labels:
+        team: team-a
+```
+
+> **Важно:** лейблы должны стоять на **workload-ресурсах** (pod template), а **не на самих namespace**. Если повесить `team` только на объект Namespace, агрегация не сработает корректно — OpenCost вернёт стоимость всего кластера ([issue #2753](https://github.com/opencost/opencost/issues/2753)).
+
+**2. Запросите стоимость через API:**
+
+```bash
+curl -G http://localhost:9003/allocation \
+  -d window=7d \
+  -d aggregate=label:team \
+  -d accumulate=true
+```
+
+Результат — общая стоимость за 7 дней, сгруппированная по значению лейбла `team`, независимо от namespace.
+
+### Альтернатива: фильтр по namespace
+
+Если не хотите добавлять лейблы на все ресурсы, можно фильтровать по конкретным namespace команды:
+
+```bash
+curl -G http://localhost:9003/allocation \
+  -d window=7d \
+  -d aggregate=namespace \
+  -d 'filter=namespace:"team-a-backend"+namespace:"team-a-frontend"' \
+  -d accumulate=true
+```
+
+### Сравнение подходов
+
+| Подход | Плюсы | Минусы |
+|--------|-------|--------|
+| `label:team` | Одна строка = одна команда, автоматическая сумма | Нужно расставить лейблы на все workloads |
+| Фильтр по namespace | Не нужны дополнительные лейблы | Нужно вручную перечислять namespace команды |
 
 ## Скрейпинг метрик OpenCost
 
 OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) через **активацию ServiceMonitor** — на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent'ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results».
-
-## Подключение MCP OpenCost
-
-В OpenCost встроен MCP-сервер (Model Context Protocol). Он предоставляет инструменты для запроса данных о стоимости кластера: AI-ассистенты (например, Cursor) могут через MCP получать cost-метрики и отвечать на вопросы о расходах.
-
-### Возможности MCP
-
-Через MCP доступны четыре инструмента:
-
-| Инструмент | Назначение |
-|------------|------------|
-| **get_allocation_costs** | Стоимость по аллокациям (namespace, deployment, pod, container и др.). Агрегация, фильтры, учёт idle/LB, накопление по времени. |
-| **get_asset_costs** | Стоимость по активам (ноды, диски и т.п.) за заданное окно времени. |
-| **get_cloud_costs** | Облачные расходы: по провайдеру, региону, сервису, аккаунту, категории. Агрегация и фильтрация. |
-| **get_efficiency** | Эффективность ресурсов: CPU/память (usage/request), рекомендации по rightsizing и оценка потенциальной экономии. |
-
-Общие параметры: `window` (временное окно), `aggregate` (по чему группировать), `filter` (фильтр по меткам). Для аллокаций можно включать idle, share load balancer, настраивать шаг и разрешение.
-
-MCP доступен по отдельному поддомену. Добавьте сервер в настройки MCP:
-
-```json
-{
-  "mcpServers": {
-    "opencost": {
-      "type": "http",
-      "url": "http://mcp-opencost.apatsev.org.ru"
-    }
-  }
-}
-```
-
-Документация: [OpenCost MCP](https://opencost.io/docs/integrations/mcp/).
 
 ## Метрики, которые экспортирует OpenCost
 
@@ -168,6 +187,8 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 | `kubecost_http_response_size_bytes` | Размер ответа | endpoint, method | байты |
 
 Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
+
+Подключение OpenCost через MCP (для AI-ассистентов) описано в [mcp.md](mcp.md).
 
 ### Получение метрик через kubectl
 
