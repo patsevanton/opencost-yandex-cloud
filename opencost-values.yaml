@@ -21,17 +21,6 @@
         enabled: true
         createConfigmap: false   # Используем свой ConfigMap (см. custom-pricing-configmap.yaml): чарт генерирует неверный формат
         provider: custom
-        # costModel:
-        #   CPU: 1.2852                 # ₽ за 1 vCPU-час:acontentReference[oaicite:7]{index=7}
-        #   RAM: 0.3348                 # ₽ за 1 ГБ RAM-час:contentReference[oaicite:8]{index=8}
-        #   storage: 0.0179             # ₽ за 1 ГБ SSD-час (12.8628 ₽/720 ч):contentReference[oaicite:9]{index=9}
-        #   LBIngressDataCost: "0.01"
-        #   FirstFiveForwardingRulesCost: "0.0"
-        #   AdditionalForwardingRuleCost: "0.0"
-        #   zoneNetworkEgress: 1.6524   # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:10]{index=10}
-        #   regionNetworkEgress: 1.6524 # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:11]{index=11}
-        #   internetNetworkEgress: 1.6524 # ₽ за 1 ГБ исходящего трафика:contentReference[oaicite:12]{index=12}
-
       ui:
         modelFqdn: "localhost:9003" # Обход проблемы hairpin NAT в Yandex Cloud K8s: nginx проксирует через localhost вместо ClusterIP
         ingress:
