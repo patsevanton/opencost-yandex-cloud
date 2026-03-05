@@ -14,9 +14,9 @@
           USE_CUSTOM_PROVIDER:                  true    # Использовать кастомного облачного провайдера
       prometheus:
         internal:
-          serviceName: prometheus-kube-prometheus-prometheus
-          namespaceName: monitoring
-          port: 9090
+          serviceName: vmsingle-vmks-victoria-metrics-k8s-stack
+          namespaceName: vmks
+          port: 8428
       customPricing:
         enabled: true
         createConfigmap: false   # Используем свой ConfigMap (см. custom-pricing-configmap.yaml): чарт генерирует неверный формат

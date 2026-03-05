@@ -1,6 +1,8 @@
 # ConfigMap для custom pricing OpenCost.
+# Использование этого ConfigMap обязательно: кастомные цены из одного JSON в ConfigMap
+# в актуальном OpenCost могут не подхватываться — https://github.com/opencost/opencost/issues/2925.
 # Имя должно совпадать с opencost.customPricing.configmapName (по умолчанию custom-pricing-model).
-# OpenCost ожидает плоские ключи в data, а не один JSON-файл (см. opencost/opencost-helm-chart#240).
+# OpenCost ожидает плоские ключи в data, а не один JSON-файл.
 # Для CPU, RAM, Storage при загрузке из ConfigMap OpenCost делит значение на 730 (считает ставки месячными),
 # поэтому указываем месячные ставки: почасовая_ставка * 730.
 apiVersion: v1
