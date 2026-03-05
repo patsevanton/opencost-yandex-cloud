@@ -1,3 +1,16 @@
+# Лейблы подов для группировки в OpenCost (aggregate=label:team) — стоимость по командам
+vmsingle:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
+
+vmagent:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
+
 grafana:
   ingress:
     ingressClassName: nginx

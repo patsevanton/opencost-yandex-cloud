@@ -109,12 +109,12 @@ spec:
         team: team-a
 ```
 
-> **Важно:** лейблы должны стоять на **workload-ресурсах** (pod template), а **не на самих namespace**. Если повесить `team` только на объект Namespace, агрегация не сработает корректно — OpenCost вернёт стоимость всего кластера ([issue #2753](https://github.com/opencost/opencost/issues/2753)).
+> **Важно:** лейблы должны стоять на **workload-ресурсах** (pod template - уточнить), а **не на самих namespace**. Если повесить `team` только на объект Namespace, агрегация не сработает корректно — OpenCost вернёт стоимость всего кластера ([issue #2753](https://github.com/opencost/opencost/issues/2753)). Навесить label на Namespace и считать по нему без лейблов на pod/Deployment **нельзя**: OpenCost не использует лейблы namespace для аллокаций.
 
 **2. Запросите стоимость через API:**
 
 ```bash
-curl -G http://localhost:9003/allocation \
+curl -G http://opencost.apatsev.org.ru/allocation  \
   -d window=7d \
   -d aggregate=label:team \
   -d accumulate=true
@@ -122,24 +122,19 @@ curl -G http://localhost:9003/allocation \
 
 Результат — общая стоимость за 7 дней, сгруппированная по значению лейбла `team`, независимо от namespace.
 
-### Альтернатива: фильтр по namespace
+В этом репозитории уже настроены лейблы для группировки инфраструктурных затрат:
+- **Victoria Metrics K8s Stack** (`vmks-values.yaml`): поды vmsingle и vmagent помечены `team: metrics`.
+- **OpenCost** (`opencost-values.yaml`): под OpenCost помечен `team: finops`.
 
-Если не хотите добавлять лейблы на все ресурсы, можно фильтровать по конкретным namespace команды:
+**3. Агрегация в UI**
 
-```bash
-curl -G http://localhost:9003/allocation \
-  -d window=7d \
-  -d aggregate=namespace \
-  -d 'filter=namespace:"team-a-backend"+namespace:"team-a-frontend"' \
-  -d accumulate=true
+В веб-интерфейсе OpenCost (порт 9090) есть выпадающий список **«Aggregate by»** (Namespace, Deployment, Pod и т.д.). Варианта «по лейблу team» в стандартной сборке может не быть — его можно открыть **через URL**, добавив параметр `agg=label:team`:
+
+```
+http://opencost.apatsev.org.ru/allocation?window=7d&agg=label:team&acc=true
 ```
 
-### Сравнение подходов
-
-| Подход | Плюсы | Минусы |
-|--------|-------|--------|
-| `label:team` | Одна строка = одна команда, автоматическая сумма | Нужно расставить лейблы на все workloads |
-| Фильтр по namespace | Не нужны дополнительные лейблы | Нужно вручную перечислять namespace команды |
+Так откроется отчёт за 7 дней, сгруппированный по командам (включая `metrics` и `finops`). Через API и MCP агрегация `aggregate=label:team` доступна без ограничений.
 
 ## Скрейпинг метрик OpenCost
 
