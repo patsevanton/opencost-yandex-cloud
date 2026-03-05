@@ -1,0 +1,112 @@
+# opencost-yandex-cloud
+
+Тестирование OpenCost в Yandex Cloud.
+
+## Зачем OpenCost нужен Prometheus-совместимый TSDB
+
+OpenCost сам не собирает и не хранит метрики. Для расчёта стоимости ему нужна внешняя база временных рядов с Prometheus API, из которой он читает:
+
+- **node-exporter** — использование CPU, памяти, диска на нодах;
+- **kube-state-metrics** — запросы/лимиты подов, PVC, состояние нод.
+
+На основе этих метрик OpenCost строит cost-модель и экспортирует свои метрики (например, `node_cpu_hourly_cost`, `container_cpu_allocation`). Запросы за прошлые периоды (день, месяц) выполняются через PromQL по уже сохранённым данным в TSDB. Без Prometheus-совместимого хранилища OpenCost не из чего считать стоимость. В этом репозитории в качестве TSDB используется Prometheus (kube-prometheus-stack).
+
+Prometheus Operator CRD отдельно устанавливать не нужно: kube-prometheus-stack уже включает нужные CRD (в т.ч. ServiceMonitor).
+
+## Установка Prometheus Stack (kube-prometheus-stack)
+
+Для установки Prometheus Stack в кластер Kubernetes выполните следующие шаги:
+
+1. Добавьте репозиторий Helm-чартов Prometheus Community:
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+```
+
+2. Установите kube-prometheus-stack (Prometheus, Grafana, Alertmanager, node-exporter, kube-state-metrics) с включённым Ingress для Grafana:
+```bash
+helm upgrade --install --wait --timeout 10m \
+      prometheus prometheus-community/kube-prometheus-stack \
+      --namespace monitoring --create-namespace \
+      --version 67.2.0 \
+      -f prometheus-stack-values.yaml
+```
+
+### Пароль admin Grafana
+
+Grafana входит в kube-prometheus-stack. Логин по умолчанию: `admin`. Пароль хранится в секрете Kubernetes:
+
+```bash
+kubectl get secret prometheus-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 -d; echo
+```
+
+Grafana доступна по адресу http://grafana.apatsev.org.ru (см. `prometheus-stack-values.yaml`).
+
+## Установка OpenCost
+
+Для установки OpenCost в кластер Kubernetes выполните следующие шаги:
+
+1. Добавьте репозиторий OpenCost Helm:
+```bash
+helm repo add opencost https://opencost.github.io/opencost-helm-chart
+helm repo update
+```
+
+2. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost (тогда поды при старте сразу подхватят цены, перезапуск не нужен; иначе в UI будет $0.00.
+Подробнее в issue https://github.com/opencost/opencost-helm-chart/issues/240
+```bash
+kubectl create namespace opencost --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f custom-pricing-configmap.yaml
+```
+
+3. Установите OpenCost, используя подготовленный файл значений:
+```bash
+helm upgrade --install --wait \
+   opencost opencost/opencost \
+   --namespace opencost \
+   --version 2.5.9 \
+   --values opencost-values.yaml
+```
+
+4. После установки OpenCost будет доступен:
+  - по адресу http://opencost.apatsev.org.ru;
+  - через Ingress-контроллер NGINX (HTTP).
+
+
+## Скрейпинг метрик OpenCost
+
+OpenCost не только читает метрики из Prometheus, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться Prometheus** и попадать в TSDB; иначе в хранилище нет cost-метрик и в UI отображается «No results».
+
+В `opencost-values.yaml` включён **ServiceMonitor** (Prometheus Operator CRD). Чарт OpenCost создаёт ServiceMonitor в namespace `opencost`. Prometheus в kube-prometheus-stack по умолчанию обнаруживает ServiceMonitor во всех namespace, поэтому скрейпинг OpenCost настраивается автоматически.
+
+## Подключение MCP OpenCost
+
+В OpenCost встроен MCP-сервер (Model Context Protocol). Он предоставляет инструменты для запроса данных о стоимости кластера: AI-ассистенты (например, Cursor) могут через MCP получать cost-метрики и отвечать на вопросы о расходах.
+
+MCP доступен по отдельному поддомену. Добавьте сервер в настройки MCP:
+
+```json
+{
+  "mcpServers": {
+    "opencost": {
+      "type": "http",
+      "url": "http://mcp-opencost.apatsev.org.ru"
+    }
+  }
+}
+```
+
+Документация: [OpenCost MCP](https://opencost.io/docs/integrations/mcp/).
+
+## Почему OpenCost показывает $0.00?
+
+Если в UI отображается нулевая стоимость при указанных в `opencost-values.yaml` ценах в `customPricing.costModel`, причина в следующем.
+
+1. **Формат ConfigMap в чарте неверный** — Helm-чарт OpenCost генерирует ConfigMap в виде одного «ключа» с JSON-подобным значением, тогда как OpenCost ожидает **плоские ключи** в `data` (CPU, RAM, provider и т.д.). См. [opencost/opencost-helm-chart#240](https://github.com/opencost/opencost-helm-chart/issues/240).
+
+2. **Используется свой ConfigMap** — в `opencost-values.yaml` включено `customPricing.createConfigmap: false`, а цены задаются отдельным манифестом `custom-pricing-configmap.yaml`. Его нужно применить после установки/обновления OpenCost:  
+   `kubectl apply -f custom-pricing-configmap.yaml`
+
+3. **CPU/RAM/Storage при загрузке из ConfigMap делятся на 730** — OpenCost трактует значения из ConfigMap как **месячные** ставки и переводит в почасовые. В `custom-pricing-configmap.yaml` уже подставлены месячные значения (почасовая_ставка × 730). При изменении цен в рублях за час пересчитайте месячные и обновите ConfigMap.
+
+4. **Проверка** — после применения ConfigMap перезапустите под OpenCost (или дождитесь обновления конфига). В Prometheus проверьте метрики `node_cpu_hourly_cost`, `node_ram_hourly_cost` — в них должны быть ваши ставки.
