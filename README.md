@@ -168,3 +168,39 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 | `kubecost_http_response_size_bytes` | Размер ответа | endpoint, method | байты |
 
 Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
+
+### Получение метрик через kubectl
+
+Метрики отдаются на порту **9003**, путь `/metrics`. Варианты:
+
+**1. Port-forward и curl (удобно для просмотра локально):**
+```bash
+# В одном терминале — поднять туннель
+kubectl port-forward -n opencost svc/opencost 9003:9003
+
+# В другом — скачать метрики
+curl -s http://localhost:9003/metrics
+```
+
+**2. Одной командой через временный Pod (без порт-форварда):**
+```bash
+kubectl run curl-metrics --rm -i --restart=Never \
+  --image=curlimages/curl \
+  -n opencost -- \
+  curl -s http://opencost.opencost.svc.cluster.local:9003/metrics
+```
+
+**3. Только cost-метрики (без go_*, process_*, promhttp_*):**
+```bash
+kubectl run curl-metrics --rm -i --restart=Never \
+  --image=curlimages/curl \
+  -n opencost -- \
+  curl -s http://opencost.opencost.svc.cluster.local:9003/metrics \
+  | grep -E '^(node_|container_|pod_pvc_|kubecost_|pv_hourly|service_selector|deployment_match|statefulSet_match)'
+```
+
+**4. Проверка, что OpenCost отдаёт метрики:**
+```bash
+kubectl get svc -n opencost -l app.kubernetes.io/name=opencost
+kubectl get pods -n opencost -l app.kubernetes.io/name=opencost
+```
