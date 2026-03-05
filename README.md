@@ -10,6 +10,10 @@
 - **Интеграция с мониторингом** — скрейпить cost-метрики OpenCost в VictoriaMetrics и смотреть их в Grafana.
 - **MCP для AI-ассистентов** — подключать OpenCost по MCP (Cursor и др.) для запросов о стоимости через естественный язык.
 
+## Что такое OpenCost
+
+OpenCost — open-source проект для расчёта и визуализации стоимости ресурсов в Kubernetes. Он агрегирует данные об использовании CPU, памяти и диска (ноды, поды, PVC), применяет к ним тарифы и даёт метрики и API для отображения затрат по namespace, deployment, label и т.д. Изначально создан в Kubecost, затем выделен в отдельный проект под CNCF; поддерживает кастомные цены и интеграцию с разными облаками и онпрем-кластерами.
+
 ## Зачем OpenCost нужен Prometheus-совместимый TSDB
 
 OpenCost сам не собирает и не хранит метрики. Для расчёта стоимости ему нужна внешняя база временных рядов с Prometheus API, из которой он читает:
@@ -69,7 +73,7 @@ helm repo add opencost https://opencost.github.io/opencost-helm-chart
 helm repo update
 ```
 
-2. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost (тогда поды при старте сразу подхватят цены, перезапуск не нужен; иначе в UI будет $0.00.
+2. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost — тогда поды при старте сразу подхватят цены, перезапуск не нужен; иначе в UI будет $0.00.
 Подробнее в issue https://github.com/opencost/opencost-helm-chart/issues/240
 ```bash
 kubectl create namespace opencost --dry-run=client -o yaml | kubectl apply -f -
