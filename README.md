@@ -179,7 +179,7 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 kubectl port-forward -n opencost svc/opencost 9003:9003
 
 # В другом — только названия метрик (без значений и комментариев)
-curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's/{.*//' | grep . | sort -u
+curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's/{.*//' | grep . | sort -u > opencost_metrics.txt
 ```
 
 **2. Одной командой через временный Pod (без порт-форварда):**
