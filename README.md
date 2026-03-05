@@ -87,10 +87,7 @@ helm upgrade --install --wait \
    --values opencost-values.yaml
 ```
 
-4. После установки OpenCost будет доступен:
-  - по адресу http://opencost.apatsev.org.ru;
-  - через Ingress-контроллер NGINX (HTTP).
-  - Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
+4. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
 
 
 ## Скрейпинг метрик OpenCost
