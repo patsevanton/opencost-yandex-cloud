@@ -87,6 +87,10 @@ opencost:
 3. **Только перечисленные CSP**  
    Для провайдеров без готовой интеграции (в т.ч. Yandex Cloud) Cloud Costs в текущем виде недоступен; остаётся Custom Pricing и при необходимости свой экспорт/агрегация счетов снаружи OpenCost.
 
+## TODO
+
+- [ ] Исследовать возможность использования [API получения списаний Yandex Cloud](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api) для интеграции фактических расходов (Cloud Costs или кастомный экспорт).
+
 ## Ссылки
 
 - [Cloud Service Provider Configuration — Cloud Costs](https://www.opencost.io/docs/configuration/#cloud-costs)
