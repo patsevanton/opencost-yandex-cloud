@@ -194,12 +194,9 @@ curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's
 **2. Сравнение метрик из файла с VictoriaMetrics (внутри кластера):**
 
 ```bash
-# Терминал 1 — туннель к VictoriaMetrics
-kubectl port-forward -n vmks svc/vmsingle-vmks-victoria-metrics-k8s-stack 8428:8428
-
-# Терминал 2 — из корня репозитория
+# из корня репозитория
 python3 scripts/compare_vm_metrics.py \
-  --vm-url http://localhost:8428 \
+  --vm-url http://vmsingle.apatsev.org.ru \
   --file opencost_metrics.txt
 ```
 
@@ -212,7 +209,7 @@ python3 scripts/compare_vm_metrics.py \
 kubectl port-forward -n vmks svc/vmks-grafana 3000:80
 
 # Передать список метрик из сравнения и URL Grafana; API key — через переменную или --api-key
-python3 scripts/compare_vm_metrics.py --vm-url http://localhost:8428 --file opencost_metrics.txt 2>/dev/null | tail -n +2 \
+python3 scripts/compare_vm_metrics.py --vm-url http://vmsingle.apatsev.org.ru --file opencost_metrics.txt 2>/dev/null | tail -n +2 \
   | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://localhost:3000
 ```
 
