@@ -38,3 +38,11 @@ resource "yandex_dns_recordset" "mcp-opencost" {
   ttl     = 200
   data    = [yandex_vpc_address.addr.external_ipv4_address[0].address]
 }
+
+resource "yandex_dns_recordset" "vmsingle" {
+  zone_id = yandex_dns_zone.apatsev-org-ru.id
+  name    = "vmsingle.apatsev.org.ru."
+  type    = "A"
+  ttl     = 200
+  data    = [yandex_vpc_address.addr.external_ipv4_address[0].address]
+}

@@ -202,3 +202,18 @@ python3 scripts/compare_vm_metrics.py \
   --vm-url http://localhost:8428 \
   --file opencost_metrics.txt
 ```
+
+**3. Проверка использования метрик в дашбордах Grafana:**
+
+Скрипт `scripts/grafana_dashboard_metrics.py` по списку метрик (например, из вывода `compare_vm_metrics.py`) опрашивает Grafana API и выводит, в каких дашбордах встречается каждая метрика. Запуск:
+
+```bash
+# Туннель к Grafana (если не доступна по URL)
+kubectl port-forward -n vmks svc/vmks-grafana 3000:80
+
+# Передать список метрик из сравнения и URL Grafana; API key — через переменную или --api-key
+python3 scripts/compare_vm_metrics.py --vm-url http://localhost:8428 --file opencost_metrics.txt 2>/dev/null | tail -n +2 \
+  | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://localhost:3000
+```
+
+Для Grafana по домену используйте `--grafana-url http://grafana.apatsev.org.ru` и задайте ключ: `export GRAFANA_API_KEY=...` или `--api-key ...` (Service Account token или API Key в разделе «Service accounts» / «API Keys»).
