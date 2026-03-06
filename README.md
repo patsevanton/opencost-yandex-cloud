@@ -190,3 +190,15 @@ kubectl port-forward -n opencost svc/opencost 9003:9003
 # В другом — только названия метрик (без значений и комментариев)
 curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's/{.*//' | grep . | sort -u > opencost_metrics.txt
 ```
+
+**2. Сравнение метрик из файла с VictoriaMetrics (внутри кластера):**
+
+```bash
+# Терминал 1 — туннель к VictoriaMetrics
+kubectl port-forward -n vmks svc/vmsingle-vmks-victoria-metrics-k8s-stack 8428:8428
+
+# Терминал 2 — из корня репозитория
+python3 scripts/compare_vm_metrics.py \
+  --vm-url http://localhost:8428 \
+  --file opencost_metrics.txt
+```

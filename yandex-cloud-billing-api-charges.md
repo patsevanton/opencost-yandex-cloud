@@ -48,34 +48,6 @@ export IAM_TOKEN=$(yc iam create-token)
 
 **Важно:** токен, выданный `yc iam create-token`, живёт около 12 часов. Для долгоживущих скриптов и CI/CD предпочтительнее сервисный аккаунт и JWT (вариант 3).
 
-**Вариант 2: OAuth-токен (пользовательский аккаунт)**
-
-1. Получить OAuth-токен в [OAuth-сервисе Yandex](https://oauth.yandex.ru/).
-2. Обменять его на IAM-токен:
-
-```bash
-curl -s -X POST "https://iam.api.cloud.yandex.net/iam/v1/tokens" \
-  -H "Content-Type: application/json" \
-  -d '{"yandexPassportOauthToken": "<OAuth-токен>"}'
-```
-
-В ответе — JSON с полями `iamToken` и `expiresAt`. Значение `iamToken` подставлять в `Authorization: Bearer ...`.
-
-**Вариант 3: JWT сервисного аккаунта (для автоматизации и CI/CD)**
-
-1. Создать сервисный аккаунт и ключ для JWT в консоли или через API.
-2. Сформировать JWT и отправить запрос:
-
-```bash
-# IAM_TOKEN создаётся запросом с JWT (см. документацию IAM Token Create)
-curl -s -X POST "https://iam.api.cloud.yandex.net/iam/v1/tokens" \
-  -H "Content-Type: application/json" \
-  -d '{"jwt": "<JWT>"}'
-```
-
-Ответ содержит `iamToken` и `expiresAt`. Подробности: [IAM Token Create](https://yandex.cloud/en/docs/iam/api-ref/IamToken/create).
-
-
 ## 3. Billing API: базовый URL и роли
 
 - **Base URL:** `https://billing.api.cloud.yandex.net/billing/v1`
