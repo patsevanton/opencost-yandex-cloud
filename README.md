@@ -191,7 +191,9 @@ kubectl port-forward -n opencost svc/opencost 9003:9003
 curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's/{.*//' | grep . | sort -u > opencost_metrics.txt
 ```
 
-**2. Сравнение метрик из файла с VictoriaMetrics (внутри кластера):**
+**2. Сравнение метрик из файла с VictoriaMetrics (без port-forward):**
+
+Скрипт обращается к VictoriaMetrics по публичному URL (ingress в `vmks-values.yaml` с `path: /`):
 
 ```bash
 # из корня репозитория
@@ -199,6 +201,8 @@ python3 scripts/compare_vm_metrics.py \
   --vm-url http://vmsingle.apatsev.org.ru \
   --file opencost_metrics.txt
 ```
+
+Если по этому URL приходит 404, укажите префикс API: `--api-prefix select/0/prometheus`. Альтернатива — port-forward: `kubectl port-forward -n vmks svc/vmsingle-vmks-victoria-metrics-k8s-stack 8428:8428` и `--vm-url http://localhost:8428`.
 
 **3. Проверка использования метрик в дашбордах Grafana:**
 

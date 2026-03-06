@@ -4,13 +4,14 @@ vmsingle:
     podMetadata:
       labels:
         team: metrics
-    ingress:
-      enabled: true
-      ingressClassName: nginx
-      annotations:
-        nginx.ingress.kubernetes.io/ssl-redirect: "false"
-      hosts:
-        - vmsingle.apatsev.org.ru
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    path: /
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    hosts:
+      - vmsingle.apatsev.org.ru
 
 vmagent:
   spec:

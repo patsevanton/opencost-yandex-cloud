@@ -11,9 +11,17 @@ def _read_lines(path: str) -> list[str]:
         return [ln.strip() for ln in f.read().splitlines() if ln.strip()]
 
 
-def _fetch_metric_names(vm_base_url: str, tenant: str, start: str | None, end: str | None, match: str | None) -> list[str]:
+def _fetch_metric_names(
+    vm_base_url: str,
+    api_prefix: str,
+    tenant: str,
+    start: str | None,
+    end: str | None,
+    match: str | None,
+) -> list[str]:
     base = vm_base_url.rstrip("/")
-    url = f"{base}/api/v1/label/__name__/values"
+    prefix = ("/" + api_prefix.strip("/")) if api_prefix else ""
+    url = f"{base}{prefix}/api/v1/label/__name__/values"
     params: dict[str, str] = {}
     if tenant:
         params["tenant"] = tenant
@@ -36,7 +44,8 @@ def _fetch_metric_names(vm_base_url: str, tenant: str, start: str | None, end: s
             detail = e.read().decode("utf-8", errors="replace")
         except Exception:
             pass
-        raise RuntimeError(f"HTTP {e.code} from {url}\n{detail}".strip()) from e
+        hint = " For ingress URL try --api-prefix select/0/prometheus. Or use kubectl port-forward to VM and --vm-url http://localhost:8428."
+        raise RuntimeError(f"HTTP {e.code} from {url}\n{detail}".strip() + hint) from e
     except urllib.error.URLError as e:
         raise RuntimeError(f"Failed to reach {url}: {e}") from e
 
@@ -66,7 +75,12 @@ def main() -> int:
     ap.add_argument(
         "--vm-url",
         required=True,
-        help="VictoriaMetrics base URL (e.g. http://localhost:8428 after kubectl port-forward).",
+        help="VictoriaMetrics base URL (e.g. http://vmsingle.apatsev.org.ru or http://localhost:8428 with port-forward).",
+    )
+    ap.add_argument(
+        "--api-prefix",
+        default="",
+        help="Optional path prefix before /api/ (e.g. 'select/0/prometheus' if VM is behind vmauth or path-based proxy).",
     )
     ap.add_argument(
         "--file",
@@ -89,7 +103,18 @@ def main() -> int:
     args = ap.parse_args()
 
     want = sorted(set(_read_lines(args.file)))
-    have = sorted(set(_fetch_metric_names(args.vm_url, args.tenant, args.start, args.end, args.match)))
+    have = sorted(
+        set(
+            _fetch_metric_names(
+                args.vm_url,
+                args.api_prefix,
+                args.tenant,
+                args.start,
+                args.end,
+                args.match,
+            )
+        )
+    )
 
     want_set = set(want)
     have_set = set(have)
