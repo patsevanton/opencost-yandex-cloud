@@ -193,8 +193,6 @@ curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's
 
 **2. Сравнение метрик из файла с VictoriaMetrics (без port-forward):**
 
-Скрипт обращается к VictoriaMetrics по публичному URL (ingress в `vmks-values.yaml` с `path: /`):
-
 ```bash
 # из корня репозитория
 python3 scripts/compare_vm_metrics.py \
@@ -202,19 +200,14 @@ python3 scripts/compare_vm_metrics.py \
   --file opencost_metrics.txt
 ```
 
-Если по этому URL приходит 404, укажите префикс API: `--api-prefix select/0/prometheus`. Альтернатива — port-forward: `kubectl port-forward -n vmks svc/vmsingle-vmks-victoria-metrics-k8s-stack 8428:8428` и `--vm-url http://localhost:8428`.
-
 **3. Проверка использования метрик в дашбордах Grafana:**
 
 Скрипт `scripts/grafana_dashboard_metrics.py` по списку метрик (например, из вывода `compare_vm_metrics.py`) опрашивает Grafana API и выводит, в каких дашбордах встречается каждая метрика. Запуск:
 
 ```bash
-# Туннель к Grafana (если не доступна по URL)
-kubectl port-forward -n vmks svc/vmks-grafana 3000:80
-
-# Передать список метрик из сравнения и URL Grafana; API key — через переменную или --api-key
+export GRAFANA_API_KEY="admin:$(kubectl get secret vmks-grafana -n vmks -o jsonpath='{.data.admin-password}' | base64 -d)"
 python3 scripts/compare_vm_metrics.py --vm-url http://vmsingle.apatsev.org.ru --file opencost_metrics.txt 2>/dev/null | tail -n +2 \
-  | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://localhost:3000
+  | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://grafana.apatsev.org.ru
 ```
 
 Для Grafana по домену используйте `--grafana-url http://grafana.apatsev.org.ru` и задайте ключ: `export GRAFANA_API_KEY=...` или `--api-key ...` (Service Account token или API Key в разделе «Service accounts» / «API Keys»).

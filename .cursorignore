@@ -16,7 +16,6 @@ mcp.md
 net.tf
 opencost-values.yaml
 opencost_metrics.txt
-scripts
 terraform.tfstate
 terraform.tfstate.backup
 unallocated_pods.md

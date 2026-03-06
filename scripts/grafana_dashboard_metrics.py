@@ -4,6 +4,7 @@ Find which Grafana dashboards use a given list of metric names.
 Uses Grafana HTTP API (search + get dashboard by uid).
 """
 import argparse
+import base64
 import json
 import re
 import urllib.error
@@ -15,7 +16,11 @@ def _request(grafana_url: str, path: str, api_key: str) -> bytes:
     url = f"{base}{path}"
     headers = {"Accept": "application/json"}
     if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+        if ":" in api_key:
+            # Basic auth: login:password
+            headers["Authorization"] = "Basic " + base64.b64encode(api_key.encode()).decode()
+        else:
+            headers["Authorization"] = f"Bearer {api_key}"
     req = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(req, timeout=30) as resp:
         return resp.read()
@@ -65,7 +70,7 @@ def main() -> int:
     ap.add_argument(
         "--api-key",
         default="",
-        help="Grafana API key or service account token (or set GRAFANA_API_KEY).",
+        help="Grafana API key, service account token, or Basic auth as login:password (or set GRAFANA_API_KEY).",
     )
     ap.add_argument(
         "--metrics",
