@@ -210,4 +210,3 @@ python3 scripts/compare_vm_metrics.py --vm-url http://vmsingle.apatsev.org.ru --
   | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://grafana.apatsev.org.ru
 ```
 
-Для Grafana по домену используйте `--grafana-url http://grafana.apatsev.org.ru` и задайте ключ: `export GRAFANA_API_KEY=...` или `--api-key ...` (Service Account token или API Key в разделе «Service accounts» / «API Keys»).
