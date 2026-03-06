@@ -4,7 +4,7 @@
 
 **Официальная документация:** [Получение детализации через API](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api).
 
----
+
 
 ## 1. Обзор
 
@@ -16,7 +16,6 @@ Yandex Cloud предоставляет:
 
 Прямой REST-метод «список списаний за период» в публичной документации описан в рамках операции «Получение детализации через API» (настройка экспорта и/или доступ к данным). Ниже — как проверить доступ к API и к каким endpoint’ам обращаться.
 
----
 
 ## 2. Аутентификация
 
@@ -63,7 +62,7 @@ yc iam create-token
 
 Вывод — готовый IAM-токен для подстановки в curl.
 
----
+
 
 ## 3. Billing API: базовый URL и роли
 
@@ -71,7 +70,7 @@ yc iam create-token
 - **Роли для доступа к биллингу:**  
   `billing.accounts.owner`, `billing.accounts.admin` или `billing.accounts.editor` (см. [документацию](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api)).
 
----
+
 
 ## 4. Проверка через curl
 
@@ -120,7 +119,7 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 
 Детализация расходов (списания за период) в публичной документации чаще всего связана с **экспортом в CSV** (разовым или в Object Storage), а не с отдельным REST-методом «список списаний». После настройки экспорта данные можно забирать из бакета или анализировать через Yandex Query.
 
----
+
 
 ## 5. Экспорт детализации (CSV)
 
@@ -136,13 +135,13 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 1. Настроить экспорт в бакет.
 2. Читать CSV из бакета по S3-совместимому API или через Yandex Query.
 
----
+
 
 ## 6. Yandex Query (анализ выгруженных данных)
 
 Если детализация уже выгружается в бакет, можно использовать [Yandex Query](https://yandex.cloud/ru-kz/docs/billing/operations/query-integration): готовые запросы (топ ресурсов, расход по сервисам и т.д.) и свой YQL. Результаты доступны через HTTP API Query — удобно для интеграций и дашбордов.
 
----
+
 
 ## 7. Чек-лист проверки
 
@@ -153,7 +152,7 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 | 3 | Убедиться в правах на биллинг | Роли `billing.accounts.owner` / `admin` / `editor` |
 | 4 | Настроить детализацию (если нужно) | Консоль биллинга → экспорт в CSV / в бакет; при необходимости — Yandex Query |
 
----
+
 
 ## 8. Связь с OpenCost
 
@@ -164,7 +163,7 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 
 См. [cloud-costs.md](cloud-costs.md) и [README.md](README.md).
 
----
+
 
 ## Ссылки
 
