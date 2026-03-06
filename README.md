@@ -9,6 +9,10 @@
 - **Кастомные цены** — задавать тарифы через ConfigMap и обходить ограничения Helm-чарта OpenCost в формате цен.
 - **Интеграция с мониторингом** — скрейпить cost-метрики OpenCost в VictoriaMetrics и смотреть их в Grafana.
 
+## TODO
+
+- [ ] Проверить через curl (или другие инструменты) получение детализации расходов по API Yandex Cloud: [Получение детализации через API](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api).
+
 Все Helm-чарты в инструкциях ниже устанавливаются через **OCI** (`oci://...`), без `helm repo add`.
 
 ## Что такое OpenCost
