@@ -4,8 +4,6 @@
 
 **Официальная документация:** [Получение детализации через API](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api).
 
-
-
 ## 1. Обзор
 
 Yandex Cloud предоставляет:
@@ -27,10 +25,33 @@ Authorization: Bearer <IAM_TOKEN>
 
 ### 2.1. Получение IAM-токена
 
-**Вариант A: OAuth-токен (пользовательский аккаунт)**
+IAM-токен нужен для любого запроса к Billing API (и к другим API Yandex Cloud). Его можно получить несколькими способами.
+
+**Вариант 1: Команда `yc iam create-token` (самый простой способ)**
+
+Да, IAM-токен можно получить командой:
+
+```bash
+yc iam create-token
+```
+
+Команда выводит в stdout готовый IAM-токен. Условия:
+
+- Установлен [YC CLI](https://yandex.cloud/ru/docs/cli/) (`yc`).
+- Выполнен вход в аккаунт: `yc init` (указан OAuth-токен или другой способ аутентификации).
+
+Пример использования в скрипте:
+
+```bash
+export IAM_TOKEN=$(yc iam create-token)
+```
+
+**Важно:** токен, выданный `yc iam create-token`, живёт около 12 часов. Для долгоживущих скриптов и CI/CD предпочтительнее сервисный аккаунт и JWT (вариант 3).
+
+**Вариант 2: OAuth-токен (пользовательский аккаунт)**
 
 1. Получить OAuth-токен в [OAuth-сервисе Yandex](https://oauth.yandex.ru/).
-2. Создать IAM-токен:
+2. Обменять его на IAM-токен:
 
 ```bash
 curl -s -X POST "https://iam.api.cloud.yandex.net/iam/v1/tokens" \
@@ -38,11 +59,11 @@ curl -s -X POST "https://iam.api.cloud.yandex.net/iam/v1/tokens" \
   -d '{"yandexPassportOauthToken": "<OAuth-токен>"}'
 ```
 
-В ответе будет JSON с полями `iamToken` и `expiresAt`. Значение `iamToken` подставлять в `Authorization: Bearer ...`.
+В ответе — JSON с полями `iamToken` и `expiresAt`. Значение `iamToken` подставлять в `Authorization: Bearer ...`.
 
-**Вариант B: JWT сервисного аккаунта (для автоматизации)**
+**Вариант 3: JWT сервисного аккаунта (для автоматизации и CI/CD)**
 
-1. Создать ключ сервисного аккаунта (ключ для JWT).
+1. Создать сервисный аккаунт и ключ для JWT в консоли или через API.
 2. Сформировать JWT и отправить запрос:
 
 ```bash
@@ -52,16 +73,7 @@ curl -s -X POST "https://iam.api.cloud.yandex.net/iam/v1/tokens" \
   -d '{"jwt": "<JWT>"}'
 ```
 
-**Вариант C: CLI `yc`**
-
-Если установлен [YC CLI](https://yandex.cloud/ru/docs/cli/) и выполнен `yc init`:
-
-```bash
-yc iam create-token
-```
-
-Вывод — готовый IAM-токен для подстановки в curl.
-
+Ответ содержит `iamToken` и `expiresAt`. Подробности: [IAM Token Create](https://yandex.cloud/en/docs/iam/api-ref/IamToken/create).
 
 
 ## 3. Billing API: базовый URL и роли
@@ -69,7 +81,6 @@ yc iam create-token
 - **Base URL:** `https://billing.api.cloud.yandex.net/billing/v1`
 - **Роли для доступа к биллингу:**  
   `billing.accounts.owner`, `billing.accounts.admin` или `billing.accounts.editor` (см. [документацию](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api)).
-
 
 
 ## 4. Проверка через curl
@@ -120,7 +131,6 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 Детализация расходов (списания за период) в публичной документации чаще всего связана с **экспортом в CSV** (разовым или в Object Storage), а не с отдельным REST-методом «список списаний». После настройки экспорта данные можно забирать из бакета или анализировать через Yandex Query.
 
 
-
 ## 5. Экспорт детализации (CSV)
 
 Источник: [Экспортировать расширенную детализацию](https://yandex.cloud/ru/docs/billing/operations/get-folder-report).
@@ -136,23 +146,19 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 2. Читать CSV из бакета по S3-совместимому API или через Yandex Query.
 
 
-
 ## 6. Yandex Query (анализ выгруженных данных)
 
 Если детализация уже выгружается в бакет, можно использовать [Yandex Query](https://yandex.cloud/ru-kz/docs/billing/operations/query-integration): готовые запросы (топ ресурсов, расход по сервисам и т.д.) и свой YQL. Результаты доступны через HTTP API Query — удобно для интеграций и дашбордов.
 
 
-
 ## 7. Чек-лист проверки
 
 | Шаг | Действие | Команда/ссылка |
-|-----|----------|----------------|
+|--|-|-|
 | 1 | Получить IAM-токен | `yc iam create-token` или POST на `iam.api.cloud.yandex.net/iam/v1/tokens` |
 | 2 | Проверить доступ к Billing API | `curl ... billing.api.cloud.yandex.net/billing/v1/billingAccounts` с заголовком `Authorization: Bearer $IAM_TOKEN` |
 | 3 | Убедиться в правах на биллинг | Роли `billing.accounts.owner` / `admin` / `editor` |
 | 4 | Настроить детализацию (если нужно) | Консоль биллинга → экспорт в CSV / в бакет; при необходимости — Yandex Query |
-
-
 
 ## 8. Связь с OpenCost
 
@@ -162,8 +168,6 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 - возможной будущей интеграции «Cloud Costs» или кастомного экспорта в OpenCost (Yandex Cloud пока не в списке официально поддерживаемых провайдеров Cloud Costs).
 
 См. [cloud-costs.md](cloud-costs.md) и [README.md](README.md).
-
-
 
 ## Ссылки
 
