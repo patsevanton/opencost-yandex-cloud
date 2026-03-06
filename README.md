@@ -44,10 +44,10 @@ helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/
 
 ```bash
 helm upgrade --install --wait --timeout 10m \
-      vmks oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-k8s-stack \
-      --namespace vmks --create-namespace \
-      --version 0.72.4 \
-      --values vmks-values.yaml
+    vmks oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-k8s-stack \
+    --namespace vmks --create-namespace \
+    --version 0.72.4 \
+    --values vmks-values.yaml
 ```
 
 ### Пароль admin Grafana
