@@ -47,7 +47,7 @@ helm repo update
 helm upgrade --install --wait --timeout 10m \
       vmks vm/victoria-metrics-k8s-stack \
       --namespace vmks --create-namespace \
-      --version 0.72.2 \
+      --version 0.72.4 \
       --values vmks-values.yaml
 ```
 
@@ -82,7 +82,7 @@ kubectl apply -f custom-pricing-configmap.yaml
 helm upgrade --install --wait \
    opencost opencost/opencost \
    --namespace opencost \
-   --version 2.5.9 \
+   --version 2.5.10 \
    --values opencost-values.yaml
 ```
 
