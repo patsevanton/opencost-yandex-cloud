@@ -9,9 +9,7 @@
 - **Кастомные цены** — задавать тарифы через ConfigMap и обходить ограничения Helm-чарта OpenCost в формате цен.
 - **Интеграция с мониторингом** — скрейпить cost-метрики OpenCost в VictoriaMetrics и смотреть их в Grafana.
 
-## TODO
-
-- [ ] Устанавливать все Helm-чарты через OCI (сейчас Prometheus Operator CRD уже через `oci://`, VictoriaMetrics Stack и OpenCost — через `helm repo add`).
+Все Helm-чарты в инструкциях ниже устанавливаются через **OCI** (`oci://...`), без `helm repo add`.
 
 ## Что такое OpenCost
 
@@ -38,18 +36,11 @@ helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/
 
 ## Установка VictoriaMetrics Stack
 
-Для установки VictoriaMetrics Stack в кластер Kubernetes выполните следующие шаги:
+Установка через OCI (без `helm repo add`):
 
-1. Добавьте репозиторий Helm-чартов VictoriaMetrics:
-```bash
-helm repo add vm https://victoriametrics.github.io/helm-charts/
-helm repo update
-```
-
-2. Установите VictoriaMetrics Stack с включённым Ingress:
 ```bash
 helm upgrade --install --wait --timeout 10m \
-      vmks vm/victoria-metrics-k8s-stack \
+      vmks oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-k8s-stack \
       --namespace vmks --create-namespace \
       --version 0.72.4 \
       --values vmks-values.yaml
@@ -67,30 +58,24 @@ Grafana доступна по адресу http://grafana.apatsev.org.ru (см. 
 
 ## Установка OpenCost
 
-Для установки OpenCost в кластер Kubernetes выполните следующие шаги:
+Установка через OCI (без `helm repo add`):
 
-1. Добавьте репозиторий OpenCost Helm:
-```bash
-helm repo add opencost https://opencost.github.io/opencost-helm-chart
-helm repo update
-```
-
-2. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost. В [issue #240](https://github.com/opencost/opencost-helm-chart/issues/240) описано, что данные в ConfigMap должны быть в виде плоских ключей в `data:`, иначе OpenCost их не прочитает.
+1. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost. В [issue #240](https://github.com/opencost/opencost-helm-chart/issues/240) описано, что данные в ConfigMap должны быть в виде плоских ключей в `data:`, иначе OpenCost их не прочитает.
 ```bash
 kubectl create namespace opencost --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -f custom-pricing-configmap.yaml
 ```
 
-3. Установите OpenCost, используя подготовленный файл значений:
+2. Установите OpenCost из OCI-репозитория:
 ```bash
 helm upgrade --install --wait \
-   opencost opencost/opencost \
+   opencost oci://ghcr.io/opencost/charts/opencost \
    --namespace opencost \
    --version 2.5.10 \
    --values opencost-values.yaml
 ```
 
-4. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
+3. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
 
 ## Стоимость по командам (team cost)
 
