@@ -89,6 +89,41 @@ helm upgrade --install --wait \
 
 3. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
 
+## Кастомные цены: получение и проверка данных
+
+Тарифы для OpenCost задаются в ConfigMap `custom-pricing-model` (файл `custom-pricing-configmap.yaml`). Для полей CPU, RAM и storage указываются **месячные** ставки (₽/мес за единицу); OpenCost переводит их в почасовые делением на 730.
+
+### Откуда брать значения
+
+| Источник | Описание |
+|----------|----------|
+| **Документация Yandex Cloud** | [Тарификация Compute Cloud](https://cloud.yandex.ru/docs/compute/pricing) — почасовые цены vCPU, RAM, диск, трафик. Месячная ставка = почасовая × 730. Регион и тип диска — по вашему кластеру. |
+| **Billing API (SkuService)** | Методы [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращают каталог SKU и list price. Нужен IAM-токен; маппинг SKU → vCPU/RAM/диск и пересчёт в формат ConfigMap можно автоматизировать скриптом. |
+| **Вручную** | Закрепить в комментариях ConfigMap формулу (например `# 1.2852 ₽/vCPU-час * 730`) и ссылку на страницу тарификации — при следующем обновлении расчёт повторить легко. |
+
+### Как проверять
+
+1. **Локально (перед применением)** — скрипт проверяет наличие обязательных ключей и что числовые значения в разумных диапазонах:
+   ```bash
+   python3 scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml
+   ```
+   Проверка ConfigMap из кластера: `kubectl get configmap custom-pricing-model -n opencost -o yaml | python3 scripts/validate_custom_pricing.py --stdin`
+
+2. **В кластере** — после `kubectl apply` при необходимости перезапустить под OpenCost; убедиться в UI или по метрикам (`node_cpu_hourly_cost`, `node_total_hourly_cost`), что стоимость нод и аллокаций не нулевая и не аномальная.
+
+3. **Сверка с биллингом** — за выбранный период сравнить сумму из Allocation API с фактическими списаниями (экспорт детализации в Object Storage или Yandex Query). Подробнее: [yandex-cloud-billing-api-charges.md](yandex-cloud-billing-api-charges.md).
+
+### Чек-лист обновления тарифов
+
+1. Взять актуальные почасовые цены из [тарификации](https://cloud.yandex.ru/docs/compute/pricing) (ваш регион).  
+2. Посчитать месячные: vCPU/RAM/диск × 730.  
+3. Обновить `custom-pricing-configmap.yaml`, оставить комментарии с формулой.  
+4. Запустить `scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml`.  
+5. Применить ConfigMap, при необходимости перезапустить OpenCost.  
+6. Проверить метрики/UI и при возможности сверить с биллингом.
+
+Подробное описание полей ConfigMap, источников и проверок — в [custom-pricing-strategy.md](custom-pricing-strategy.md).
+
 ## Стоимость по командам (team cost)
 
 OpenCost позволяет группировать расходы по командам, даже если у команды несколько namespace. Для этого используется агрегация по Kubernetes-лейблу через параметр `aggregate=label:<имя_лейбла>`.
