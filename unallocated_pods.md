@@ -2,6 +2,8 @@
 
 Поды без лейбла `team` — при агрегации по `label:team` попадают в __unallocated__.
 
+**Рекомендация:** добавить лейбл `team` для всех подов вне namespace `kube-system`. Тогда в __unallocated__ не будут попадать поды vmks (grafana, vmalert, vmalertmanager, node-exporter, operator, kube-state-metrics), ingress-nginx и прочие не‑kube-system workload'ы — в unallocated останутся только системные поды kube-system.
+
 | Namespace     | Pod | CPU cost (USD) | RAM cost (USD) | PV cost (USD) | Total (USD) |
 |---------------|-----|----------------|----------------|---------------|-------------|
 | vmks          | vmks-unmounted-pvcs | 0 | 0 | 0.7813 | **0.7813** |
