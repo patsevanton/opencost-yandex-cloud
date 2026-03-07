@@ -3,9 +3,13 @@ podLabels:
   team: finops
 
 opencost:
-  retention1d: 15   # Срок хранения данных с дневным разрешением (дни)
-  retention1h: 49   # Срок хранения данных с часовым разрешением (часы)
+  # --- Collector DataSource OpenCost (внутренний кэш агрегатов стоимости) ---
+  # Хранилище: внутри пода OpenCost (не VictoriaMetrics). Срок хранения кэша:
+  retention1d: 15   # интервалов по 1 дню — хранить 15 дней данных с дневным разрешением
+  retention1h: 49   # интервалов по 1 ч — хранить 49 часов данных с часовым разрешением
+
   exporter:
+    # Идентификатор кластера по умолчанию, если в метриках нет метки из PROM_CLUSTER_ID_LABEL (у нас — cluster)
     defaultClusterId: "test"
     extraEnv:
       CLOUD_PROVIDER:           DEFAULT  # Провайдер облака по умолчанию
