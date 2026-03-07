@@ -165,7 +165,7 @@ curl -G http://opencost.apatsev.org.ru/allocation  \
 Результат — общая стоимость за 7 дней, сгруппированная по значению лейбла `team`, независимо от namespace.
 
 В этом репозитории уже настроены лейблы для группировки инфраструктурных затрат:
-- **Victoria Metrics K8s Stack** (`vmks-values.yaml`): поды vmsingle и vmagent помечены `team: metrics`.
+- **Victoria Metrics K8s Stack** (`vmks-values.yaml`): поды vmsingle, vmagent, vmalert, alertmanager, grafana, node-exporter, kube-state-metrics и victoria-metrics-operator помечены `team: metrics` (через `spec.podMetadata.labels` для CR-компонентов и `podLabels` для подчартов).
 - **OpenCost** (`opencost-values.yaml`): под OpenCost помечен `team: finops`.
 
 **3. Агрегация в UI**

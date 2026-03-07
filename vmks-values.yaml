@@ -19,11 +19,10 @@ vmagent:
       labels:
         team: metrics
 
+# Grafana — подчарт использует podLabels, не spec.podMetadata
 grafana:
-  spec:
-    podMetadata:
-      labels:
-        team: metrics
+  podLabels:
+    team: metrics
   ingress:
     ingressClassName: nginx
     enabled: true
@@ -38,26 +37,24 @@ vmalert:
       labels:
         team: metrics
 
-vmalertmanager:
+# В VMKS чарте ключ — alertmanager (не vmalertmanager); spec уходит в CR VMAlertmanager (поддерживает podMetadata)
+alertmanager:
   spec:
     podMetadata:
       labels:
         team: metrics
 
-nodeExporter:
-  spec:
-    podMetadata:
-      labels:
-        team: metrics
+# Подчарт prometheus-node-exporter (ключ с дефисами); лейблы — через podLabels
+prometheus-node-exporter:
+  podLabels:
+    team: metrics
 
-kubeStateMetrics:
-  spec:
-    podMetadata:
-      labels:
-        team: metrics
+# Подчарт kube-state-metrics; лейблы — через podLabels
+kube-state-metrics:
+  podLabels:
+    team: metrics
 
+# Подчарт victoria-metrics-operator; лейблы пода оператора — через podLabels (не spec)
 victoria-metrics-operator:
-  spec:
-    podMetadata:
-      labels:
-        team: metrics
+  podLabels:
+    team: metrics
