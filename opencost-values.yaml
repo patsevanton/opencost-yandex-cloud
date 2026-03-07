@@ -26,7 +26,7 @@ opencost:
       # Не дублировать kube_* метрики (уже отдаёт kube-state-metrics) — иначе sum(kube_pod_*) в Grafana даёт 2x
       # https://github.com/opencost/opencost/issues/1465
       EMIT_KSM_V1_METRICS:       "false"  # не отдавать полный набор KSM-метрик
-      EMIT_KSM_V1_METRICS_ONLY:  "true"   # только минимальный набор KSMv1 для OpenCost (если поддерживает)
+      EMIT_KSM_V1_METRICS_ONLY:  "true"   # только минимальный набор KSMv1 для OpenCost (поддерживается чартом и приложением OpenCost)
   prometheus:
     internal:
       serviceName: vmsingle-vmks-victoria-metrics-k8s-stack
