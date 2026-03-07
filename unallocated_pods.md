@@ -40,7 +40,7 @@
 
 | Namespace     | Pod | CPU cost (USD) | RAM cost (USD) | PV cost (USD) | Total (USD) |
 |---------------|-----|----------------|----------------|---------------|-------------|
-| vmks          | vmks-unmounted-pvcs | 0 | 0 | 0.7813 | **0.7813** |
+| vmks          | f | 0 | 0 | 0.7813 | **0.7813** |
 | kube-system   | coredns-768847b69f-8w77g | 0.1178 | 0.0384 | 0 | 0.1562 |
 | kube-system   | coredns-768847b69f-2xrvr | 0.1178 | 0.0384 | 0 | 0.1562 |
 | kube-system   | metrics-server-8689cb9795-sb6wc | 0.1178 | 0.0384 | 0 | 0.1562 |

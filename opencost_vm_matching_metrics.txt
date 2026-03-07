@@ -1,5 +1,5 @@
 Dashboards scanned: 17
-Dashboards using any of the 19 metrics: 14
+Dashboards using any of the 51 metrics: 12
 
 Dashboards and metrics used:
   Kubernetes / Controller Manager
@@ -18,15 +18,7 @@ Dashboards and metrics used:
     - process_cpu_seconds_total
     - process_resident_memory_bytes
   Kubernetes / Views / Global
-    - kube_persistentvolumeclaim_info
-    - kube_pod_container_resource_requests
-    - kube_pod_container_status_running
-  Kubernetes / Views / Namespaces
-    - kube_persistentvolumeclaim_info
-    - kube_pod_container_resource_requests
-    - kube_pod_container_status_running
-  Kubernetes / Views / Pods
-    - kube_pod_container_resource_requests
+    - kube_namespace_labels
   Node Exporter Full
     - process_cpu_seconds_total
     - process_max_fds
@@ -54,17 +46,9 @@ Dashboards and metrics used:
   etcd
     - process_resident_memory_bytes
 
-Metrics used in at least one dashboard: 9
-  kube_persistentvolumeclaim_info
+Metrics used in at least one dashboard: 7
+  kube_namespace_labels
     -> Kubernetes / Views / Global
-    -> Kubernetes / Views / Namespaces
-  kube_pod_container_resource_requests
-    -> Kubernetes / Views / Global
-    -> Kubernetes / Views / Namespaces
-    -> Kubernetes / Views / Pods
-  kube_pod_container_status_running
-    -> Kubernetes / Views / Global
-    -> Kubernetes / Views / Namespaces
   process_cpu_seconds_total
     -> Kubernetes / Controller Manager
     -> Kubernetes / Kubelet
@@ -102,14 +86,48 @@ Metrics used in at least one dashboard: 9
   process_virtual_memory_max_bytes
     -> Node Exporter Full
 
-Metrics not found in any dashboard: 10
+Metrics not found in any dashboard: 44
+  container_cpu_allocation
+  container_gpu_allocation
+  container_memory_allocation_bytes
+  deployment_match_labels
+  kube_node_labels
   kube_node_status_allocatable
+  kube_node_status_allocatable_cpu_cores
+  kube_node_status_allocatable_memory_bytes
   kube_node_status_capacity
-  kube_persistentvolume_capacity_bytes
-  kube_persistentvolumeclaim_resource_requests_storage_bytes
+  kube_node_status_capacity_cpu_cores
+  kube_node_status_capacity_memory_bytes
+  kube_pod_labels
   kube_pod_owner
+  kubecost_cluster_info
+  kubecost_cluster_management_cost
+  kubecost_http_requests_total
+  kubecost_http_response_size_bytes_count
+  kubecost_http_response_size_bytes_sum
+  kubecost_http_response_time_seconds_bucket
+  kubecost_http_response_time_seconds_count
+  kubecost_http_response_time_seconds_sum
+  kubecost_load_balancer_cost
+  kubecost_network_internet_egress_cost
+  kubecost_network_nat_gateway_egress_cost
+  kubecost_network_nat_gateway_ingress_cost
+  kubecost_network_region_egress_cost
+  kubecost_network_zone_egress_cost
+  kubecost_node_is_spot
+  kubecost_pv_info
+  node_cpu_hourly_cost
+  node_gpu_count
+  node_gpu_hourly_cost
+  node_ram_hourly_cost
+  node_total_hourly_cost
+  opencost_build_info
+  pod_pvc_allocation
   process_network_receive_bytes_total
   process_network_transmit_bytes_total
   process_start_time_seconds
   promhttp_metric_handler_requests_in_flight
   promhttp_metric_handler_requests_total
+  pv_hourly_cost
+  service_selector_labels
+  statefulSet_match_labels
