@@ -12,6 +12,7 @@ metadata:
   namespace: opencost
 data:
   provider: "custom"
+  currency: "RUB"
   description: "Yandex Cloud тарифы (₽)"
   # Месячные ставки (₽/мес за единицу), OpenCost переведёт в почасовые делением на 730:
   CPU: "938.196"      # 1.2852 ₽/vCPU-час * 730
