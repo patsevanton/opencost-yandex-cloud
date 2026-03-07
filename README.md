@@ -204,9 +204,11 @@ python3 scripts/compare_vm_metrics.py \
 
 Скрипт `scripts/grafana_dashboard_metrics.py` по списку метрик (например, из вывода `compare_vm_metrics.py`) опрашивает Grafana API и выводит, в каких дашбордах встречается каждая метрика. Запуск:
 
+Команда ниже задаёт `GRAFANA_API_KEY` из секрета `vmks-grafana` в кластере, получает список метрик через `compare_vm_metrics.py` (VictoriaMetrics и `opencost_metrics.txt`), пропускает первую строку вывода и передаёт список в `grafana_dashboard_metrics.py`, который выводит, в каких дашбордах Grafana эти метрики используются.
 ```bash
 export GRAFANA_API_KEY="admin:$(kubectl get secret vmks-grafana -n vmks -o jsonpath='{.data.admin-password}' | base64 -d)"
 python3 scripts/compare_vm_metrics.py --vm-url http://vmsingle.apatsev.org.ru --file opencost_metrics.txt 2>/dev/null | tail -n +2 \
-  | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://grafana.apatsev.org.ru
-```
+  | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://grafana.apatsev.org.ru \
+  | tee opencost_vm_matching_metrics.txt
 
+```

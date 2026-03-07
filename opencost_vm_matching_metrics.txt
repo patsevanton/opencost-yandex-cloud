@@ -1,0 +1,115 @@
+Dashboards scanned: 17
+Dashboards using any of the 19 metrics: 14
+
+Dashboards and metrics used:
+  Kubernetes / Controller Manager
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+  Kubernetes / Kubelet
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+  Kubernetes / Scheduler
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+  Kubernetes / System / API Server
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+  Kubernetes / System / CoreDNS
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+  Kubernetes / Views / Global
+    - kube_persistentvolumeclaim_info
+    - kube_pod_container_resource_requests
+    - kube_pod_container_status_running
+  Kubernetes / Views / Namespaces
+    - kube_persistentvolumeclaim_info
+    - kube_pod_container_resource_requests
+    - kube_pod_container_status_running
+  Kubernetes / Views / Pods
+    - kube_pod_container_resource_requests
+  Node Exporter Full
+    - process_cpu_seconds_total
+    - process_max_fds
+    - process_open_fds
+    - process_virtual_memory_bytes
+    - process_virtual_memory_max_bytes
+  VictoriaMetrics - operator
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+  VictoriaMetrics - single-node
+    - process_cpu_seconds_total
+    - process_max_fds
+    - process_open_fds
+    - process_resident_memory_bytes
+  VictoriaMetrics - vmagent
+    - process_cpu_seconds_total
+    - process_max_fds
+    - process_open_fds
+    - process_resident_memory_bytes
+  VictoriaMetrics - vmalert
+    - process_cpu_seconds_total
+    - process_max_fds
+    - process_open_fds
+    - process_resident_memory_bytes
+  etcd
+    - process_resident_memory_bytes
+
+Metrics used in at least one dashboard: 9
+  kube_persistentvolumeclaim_info
+    -> Kubernetes / Views / Global
+    -> Kubernetes / Views / Namespaces
+  kube_pod_container_resource_requests
+    -> Kubernetes / Views / Global
+    -> Kubernetes / Views / Namespaces
+    -> Kubernetes / Views / Pods
+  kube_pod_container_status_running
+    -> Kubernetes / Views / Global
+    -> Kubernetes / Views / Namespaces
+  process_cpu_seconds_total
+    -> Kubernetes / Controller Manager
+    -> Kubernetes / Kubelet
+    -> Kubernetes / Scheduler
+    -> Kubernetes / System / API Server
+    -> Kubernetes / System / CoreDNS
+    -> Node Exporter Full
+    -> VictoriaMetrics - operator
+    -> VictoriaMetrics - single-node
+    -> VictoriaMetrics - vmagent
+    -> VictoriaMetrics - vmalert
+  process_max_fds
+    -> Node Exporter Full
+    -> VictoriaMetrics - single-node
+    -> VictoriaMetrics - vmagent
+    -> VictoriaMetrics - vmalert
+  process_open_fds
+    -> Node Exporter Full
+    -> VictoriaMetrics - single-node
+    -> VictoriaMetrics - vmagent
+    -> VictoriaMetrics - vmalert
+  process_resident_memory_bytes
+    -> Kubernetes / Controller Manager
+    -> Kubernetes / Kubelet
+    -> Kubernetes / Scheduler
+    -> Kubernetes / System / API Server
+    -> Kubernetes / System / CoreDNS
+    -> VictoriaMetrics - operator
+    -> VictoriaMetrics - single-node
+    -> VictoriaMetrics - vmagent
+    -> VictoriaMetrics - vmalert
+    -> etcd
+  process_virtual_memory_bytes
+    -> Node Exporter Full
+  process_virtual_memory_max_bytes
+    -> Node Exporter Full
+
+Metrics not found in any dashboard: 10
+  kube_node_status_allocatable
+  kube_node_status_capacity
+  kube_persistentvolume_capacity_bytes
+  kube_persistentvolumeclaim_resource_requests_storage_bytes
+  kube_pod_owner
+  process_network_receive_bytes_total
+  process_network_transmit_bytes_total
+  process_start_time_seconds
+  promhttp_metric_handler_requests_in_flight
+  promhttp_metric_handler_requests_total
