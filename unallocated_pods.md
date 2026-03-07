@@ -4,6 +4,39 @@
 
 **Рекомендация:** добавить лейбл `team` для всех подов вне namespace `kube-system`. Тогда в __unallocated__ не будут попадать поды vmks (grafana, vmalert, vmalertmanager, node-exporter, operator, kube-state-metrics), ingress-nginx и прочие не‑kube-system workload'ы — в unallocated останутся только системные поды kube-system.
 
+## Где проверять label `team` на подах
+
+| Источник | Файл | Лейбл на подах |
+|----------|------|-----------------|
+| OpenCost | `opencost-values.yaml` → `podLabels.team` | `team: finops` |
+| VMKS vmsingle, vmagent | `vmks-values.yaml` → `*.spec.podMetadata.labels` | `team: metrics` |
+| VMKS grafana, vmalert, vmalertmanager, nodeExporter, kubeStateMetrics, victoria-metrics-operator | `vmks-values.yaml` → то же | `team: metrics` (в values задан; если поды всё ещё в unallocated — проверить, что helm upgrade применён и чарт пробрасывает `podMetadata.labels` на pod template) |
+| ingress-nginx | — | в репозитории не задан; добавить при установке/апгрейде (напр. `controller.podLabels.team: platform`) |
+| kube-system | — | не добавляем; системные поды остаются в unallocated по замыслу |
+
+### Проверка в кластере (kubectl, без namespace ingress-nginx и kube-system)
+
+Поды **с** лейблом `team`:
+| Namespace | Pod | team |
+|-----------|-----|------|
+| opencost | opencost-* | finops |
+| vmks | vmagent-vmks-* | metrics |
+| vmks | vmalert-vmks-* | metrics |
+| vmks | vmsingle-vmks-* | metrics |
+
+Поды **без** лейбла `team` (попадают в unallocated):
+| Namespace | Pod |
+|-----------|-----|
+| vmks | vmalertmanager-vmks-* |
+| vmks | vmks-grafana-* |
+| vmks | vmks-kube-state-metrics-* |
+| vmks | vmks-prometheus-node-exporter-* |
+| vmks | vmks-victoria-metrics-operator-* |
+
+В namespace default, kube-node-lease, kube-public, yandex-system подов нет (или нет workload'ов с лейблом). Вывод: в vmks лейбл реально попадает на поды только у vmsingle, vmagent и vmalert; у vmalertmanager, grafana, nodeExporter, kubeStateMetrics, victoria-metrics-operator чарт не пробрасывает `podMetadata.labels` на pod template — нужно проверить шаблоны чарта или задать лейбл иначе (например через podAnnotations или другой ключ чарта).
+
+---
+
 | Namespace     | Pod | CPU cost (USD) | RAM cost (USD) | PV cost (USD) | Total (USD) |
 |---------------|-----|----------------|----------------|---------------|-------------|
 | vmks          | vmks-unmounted-pvcs | 0 | 0 | 0.7813 | **0.7813** |
@@ -35,8 +68,10 @@
 | vmks          | vmks-prometheus-node-exporter-vjdf9 | 0.0015 | 0.0027 | 0 | 0.0042 |
 | vmks          | vmks-prometheus-node-exporter-2lnpr | 0.0014 | 0.0027 | 0 | 0.0041 |
 
-**Исключены из таблицы** (имеют лейбл `team`, в __unallocated__ не входят):
-- `opencost/*` → team: finops
-- `vmsingle-vmks-*`, `vmagent-vmks-*` → team: metrics
+**Исключены из таблицы** (имеют лейбл `team` в кластере, в __unallocated__ не входят):
+- `opencost/*` → `team: finops`
+- `vmsingle-vmks-*`, `vmagent-vmks-*`, `vmalert-vmks-*` → `team: metrics`
+
+Остальные vmks-поды (vmalertmanager, grafana, node-exporter, kube-state-metrics, operator) в `vmks-values.yaml` имеют `team: metrics` в `podMetadata.labels`, но чарт не пробрасывает их на поды — см. таблицу «Поды без лейбла» выше. Повторная проверка: `kubectl get pod -n vmks -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.labels.team}{"\n"}{end}'`.
 
 Данные: OpenCost allocation API, 7d, accumulate=true, include_idle=false.
