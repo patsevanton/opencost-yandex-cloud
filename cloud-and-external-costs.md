@@ -51,8 +51,6 @@ Billing API v1 (gRPC/REST) содержит 4 сервиса:
 
 2. **OpenCost Plugin** (с версии 1.110.0) — это путь в **External Costs**: плагин, читающий CSV из Object Storage или вызывающий Yandex Query HTTP API. Данные попадают в `customCost/total` и `customCost/timeseries`. Не требует модификации ядра OpenCost.
 
-3. **Внешний агрегатор** — не Cloud и не External Costs: CronJob забирает CSV из Object Storage, агрегирует и экспортирует данные как метрики в Prometheus/VictoriaMetrics для визуализации в Grafana отдельно от OpenCost.
-
 ### Вывод
 
 Прямого API для получения списаний у Yandex Cloud нет — фактические расходы доступны только через CSV-экспорт в Object Storage и Yandex Query. Для интеграции с OpenCost наиболее реалистичен **OpenCost Plugin**, читающий CSV-детализацию из Object Storage через S3-совместимый API.
