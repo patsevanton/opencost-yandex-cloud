@@ -20,6 +20,10 @@ vmagent:
         team: metrics
 
 grafana:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
   ingress:
     ingressClassName: nginx
     enabled: true
