@@ -139,7 +139,7 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?
 - проверки фактических расходов (сверка с расчётом OpenCost по тарифам);
 - возможной будущей интеграции «Cloud Costs» или кастомного экспорта в OpenCost (Yandex Cloud пока не в списке официально поддерживаемых провайдеров Cloud Costs).
 
-См. [cloud-costs.md](cloud-costs.md) и [README.md](README.md).
+См. [cloud-and-external-costs.md](cloud-and-external-costs.md) и [README.md](README.md).
 
 ## Ссылки
 

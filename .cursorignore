@@ -6,9 +6,8 @@
 LICENSE
 README.md
 TODO.md
-cloud-costs.md
+cloud-and-external-costs.md
 custom-pricing-configmap.yaml
-external-costs.md
 ip-dns.tf
 k8s.tf
 locals.tf
