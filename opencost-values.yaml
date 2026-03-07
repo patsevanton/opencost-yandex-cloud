@@ -12,10 +12,14 @@ opencost:
     # Идентификатор кластера по умолчанию, если в метриках нет метки из PROM_CLUSTER_ID_LABEL (у нас — cluster)
     defaultClusterId: "test"
     extraEnv:
-      CLOUD_PROVIDER:           DEFAULT  # Провайдер облака по умолчанию
-      KUBECOST_SCRAPE_INTERVAL:  5m       # Интервал сбора метрик Kubecost (минуты)
-      PROM_CLUSTER_ID_LABEL:     cluster  # Метка кластера для Prometheus
-      USE_CUSTOM_PROVIDER:       true     # Использовать кастомного облачного провайдера
+      CLOUD_PROVIDER:             DEFAULT  # Провайдер облака по умолчанию
+      KUBECOST_SCRAPE_INTERVAL:   5m       # Интервал сбора метрик Kubecost (минуты)
+      PROM_CLUSTER_ID_LABEL:      cluster  # Метка кластера для Prometheus
+      USE_CUSTOM_PROVIDER:        true     # Использовать кастомного облачного провайдера
+      # Не дублировать kube_* метрики (уже отдаёт kube-state-metrics) — иначе sum(kube_pod_*) в Grafana даёт 2x
+      # https://github.com/opencost/opencost/issues/1465
+      EMIT_KSM_V1_METRICS:       "false"  # не отдавать полный набор KSM-метрик
+      EMIT_KSM_V1_METRICS_ONLY:  "true"   # только минимальный набор KSMv1 для OpenCost (если поддерживает)
   prometheus:
     internal:
       serviceName: vmsingle-vmks-victoria-metrics-k8s-stack

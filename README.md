@@ -147,6 +147,46 @@ http://opencost.apatsev.org.ru/allocation?window=7d&agg=label:team&acc=true
 
 OpenCost не только читает метрики из VictoriaMetrics, но и **отдаёт свои** (`node_cpu_hourly_cost`, `container_cpu_allocation` и др.) через **активацию ServiceMonitor** — на порту 9003 (`/metrics`). Эти метрики должны **скрейпиться vmagent'ом** и попадать в VictoriaMetrics; иначе в TSDB нет cost-метрик и в UI отображается «No results».
 
+### Дублирование метрик kube_* и опции EMIT_KSM_V1_*
+
+Эндпоинт OpenCost `/metrics` по умолчанию отдаёт те же метрики, что и **kube-state-metrics** (`kube_pod_container_status_running`, `kube_pod_container_resource_requests`, `kube_node_status_*` и др.). Если vmagent скрейпит и OpenCost, и kube-state-metrics, то в VictoriaMetrics одни и те же временные ряды попадают из двух источников — и запросы вида `sum(kube_pod_container_status_running)` дают **удвоенные** значения. Подробнее: [opencost/opencost#1465](https://github.com/opencost/opencost/issues/1465).
+
+В этом репозитории предполагается, что **kube-state-metrics всегда есть** (он входит в VictoriaMetrics K8s Stack). Ниже — зачем вообще дубликаты и что дают опции в `opencost-values.yaml`.
+
+#### Зачем OpenCost дублирует метрики KSM
+
+Дублированные метрики полезны, когда **нет** отдельного kube-state-metrics:
+
+- один источник метрик: не нужно ставить KSM отдельно;
+- минимальный стек — «только OpenCost + Prometheus»;
+- в документации Kubecost это описано как «consumed and emitted for long-term stability».
+
+Если KSM уже установлен и скрейпится, пользы от дубликатов нет, зато в TSDB попадают два набора одних и тех же имён — агрегаты в Grafana удваиваются.
+
+#### Опции в opencost-values.yaml
+
+В `opencost-values.yaml` заданы:
+
+| Переменная | Значение | Смысл |
+|------------|----------|--------|
+| `EMIT_KSM_V1_METRICS` | `"false"` | Не отдавать полный набор KSM-метрик на `/metrics`. |
+| `EMIT_KSM_V1_METRICS_ONLY` | `"true"` | Отдавать только минимальный набор KSMv1, нужный самому OpenCost (в т.ч. для fallback). |
+
+#### Что мы теряем при включении этих опций
+
+**По сути не теряем:**
+
+- **Расчёт стоимости** — не страдает. OpenCost по-прежнему **читает** метрики из VictoriaMetrics (куда пишутся данные от вашего KSM). Источник данных для cost model — скрейп VM, а не то, что OpenCost эмитит сам.
+- **Cost-метрики** (`node_*_hourly_cost`, `container_*_allocation`, `kubecost_*` и т.д.) — как и раньше отдаются с `/metrics`.
+
+**Теряем только:**
+
+- Дубликаты `kube_*` с эндпоинта OpenCost — то есть лишний объём на `/metrics` и двойные ряды в TSDB. Для конфигурации «KSM уже есть» это как раз то, что нужно убрать.
+
+**Возможный нюанс:** в [issue #3146](https://github.com/opencost/opencost/issues/3146) описан кейс, когда при `EMIT_KSM_V1_METRICS_ONLY: true` и KSM v2 возможны расхождения в лейблах (`node`/`instance`) и ошибки вида «No pricing data found for node». Это касается ситуации, когда OpenCost опирается на **свой** минимальный KSM-вывод. Если KSM скрейпится отдельно и пишется в VM, OpenCost получает метрики из VM — такой сценарий маловероятен. Если после включения опций стоимость нод и аллокации считаются нормально, конфиг можно оставлять.
+
+После `helm upgrade` открыть нужно только cost-метрики; уже накопленные дубликаты в TSDB со временем «уйдут» по retention.
+
 ## Метрики, которые экспортирует OpenCost
 
 Запросы за прошлые периоды (день, месяц) выполняются через PromQL по уже сохранённым данным в TSDB. Без Prometheus-совместимого хранилища OpenCost не из чего считать стоимость. В этом репозитории в качестве TSDB используется VictoriaMetrics (совместима с Prometheus API).
