@@ -31,3 +31,33 @@ grafana:
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
     hosts:
       - grafana.apatsev.org.ru
+
+vmalert:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
+
+vmalertmanager:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
+
+nodeExporter:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
+
+kubeStateMetrics:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
+
+victoria-metrics-operator:
+  spec:
+    podMetadata:
+      labels:
+        team: metrics
