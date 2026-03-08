@@ -74,14 +74,6 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts"
 - `401 Unauthorized` — неверный или просроченный IAM-токен.
 - `403 Forbidden` — нет прав на биллинг (нужны роли выше).
 
-**Результат проверки endpoint (без валидного токена):**
-
-```bash
-curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts" \
-  -H "Authorization: Bearer invalid_token" -H "Content-Type: application/json"
-```
-→ HTTP 401, тело в формате JSON (code 16 — UNAUTHENTICATED). Endpoint доступен; для успешного ответа нужен валидный IAM-токен.
-
 ### 4.2. Пагинация
 
 ```bash
