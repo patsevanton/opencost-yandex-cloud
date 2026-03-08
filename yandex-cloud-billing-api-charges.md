@@ -62,8 +62,6 @@ export IAM_TOKEN=$(yc iam create-token)
 Проверяет, что токен и права доступа к Billing API работают:
 
 ```bash
-export IAM_TOKEN="<подставьте_ваш_IAM_токен>"
-
 curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts" \
   -H "Authorization: Bearer $IAM_TOKEN" \
   -H "Content-Type: application/json"
@@ -79,7 +77,7 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts"
 **Результат проверки endpoint (без валидного токена):**
 
 ```bash
-$ curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts" \
+curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts" \
   -H "Authorization: Bearer invalid_token" -H "Content-Type: application/json"
 ```
 → HTTP 401, тело в формате JSON (code 16 — UNAUTHENTICATED). Endpoint доступен; для успешного ответа нужен валидный IAM-токен.
