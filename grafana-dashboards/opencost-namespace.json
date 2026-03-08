@@ -25,6 +25,7 @@
  },
  "id": 1,
  "title": " Summary",
+ "description": "Сводный блок: основные показатели затрат по выбранным неймспейсам.",
  "type": "row"
  },
  {
@@ -78,6 +79,7 @@
  }
  ],
  "title": "Hourly Cost",
+ "description": "Почасовая стоимость по выбранным неймспейсам (руб.).",
  "type": "stat"
  },
  {
@@ -131,6 +133,7 @@
  }
  ],
  "title": "Daily Cost",
+ "description": "Дневная стоимость по выбранным неймспейсам (руб.).",
  "type": "stat"
  },
  {
@@ -184,6 +187,7 @@
  }
  ],
  "title": "Monthly Cost",
+ "description": "Месячная стоимость по выбранным неймспейсам (руб.).",
  "type": "stat"
  },
  {
@@ -237,6 +241,7 @@
  }
  ],
  "title": "Monthly CPU Cost",
+ "description": "Месячные затраты на CPU по выбранным неймспейсам (руб.).",
  "type": "stat"
  },
  {
@@ -290,6 +295,7 @@
  }
  ],
  "title": "Monthly Ram Cost",
+ "description": "Месячные затраты на RAM по выбранным неймспейсам (руб.).",
  "type": "stat"
  },
  {
@@ -343,6 +349,7 @@
  }
  ],
  "title": "Monthly PV Cost",
+ "description": "Месячные затраты на постоянные тома (PV) по выбранным неймспейсам (руб.).",
  "type": "stat"
  },
  {
@@ -383,6 +390,7 @@
  }
  ],
  "title": "Daily Cost",
+ "description": "График дневной стоимости по неймспейсам во времени.",
  "type": "timeseries"
  },
  {
@@ -423,6 +431,7 @@
  }
  ],
  "title": "Monthly Cost",
+ "description": "График месячной стоимости по неймспейсам во времени.",
  "type": "timeseries"
  },
  {
@@ -486,6 +495,7 @@
  }
  ],
  "title": "Cost by Resource",
+ "description": "Распределение месячных затрат по типам ресурсов: CPU, RAM, постоянные тома (PV).",
  "type": "piechart"
  },
  {
@@ -498,6 +508,7 @@
  },
  "id": 11,
  "title": "Pod Summary",
+ "description": "Блок: затраты и сводка по подам в выбранных неймспейсах.",
  "type": "row"
  },
  {
@@ -625,6 +636,7 @@
  }
  ],
  "title": "Pod Monthly Cost",
+ "description": "Таблица месячных затрат по подам (топ-10): общая стоимость, изменение за 7 и 30 дней.",
  "transformations": [
  {
  "id": "merge"
@@ -696,6 +708,7 @@
  }
  ],
  "title": "Cost by Pod",
+ "description": "Круговая диаграмма: распределение месячных затрат по подам (топ-10).",
  "type": "piechart"
  },
  {
@@ -708,6 +721,7 @@
  },
  "id": 14,
  "title": "Container Summary",
+ "description": "Блок: затраты и сводка по контейнерам в выбранных неймспейсах.",
  "type": "row"
  },
  {
@@ -835,6 +849,7 @@
  }
  ],
  "title": "Container Monthly Cost",
+ "description": "Таблица месячных затрат по контейнерам (топ-10): общая стоимость, изменение за 7 и 30 дней.",
  "transformations": [
  {
  "id": "merge"
@@ -906,6 +921,7 @@
  }
  ],
  "title": "Cost by Container",
+ "description": "Круговая диаграмма: распределение месячных затрат по контейнерам (топ-10).",
  "type": "piechart"
  },
  {
@@ -918,6 +934,7 @@
  },
  "id": 17,
  "title": "PV Summary",
+ "description": "Блок: затраты и сводка по постоянным томам (Persistent Volumes) в выбранных неймспейсах.",
  "type": "row"
  },
  {
@@ -984,6 +1001,7 @@
  }
  ],
  "title": "Persistent Volumes Monthly Cost",
+ "description": "Таблица месячных затрат по постоянным томам: объём (GiB) и стоимость в рублях.",
  "transformations": [
  {
  "id": "merge"
@@ -1054,6 +1072,7 @@
  }
  ],
  "title": "Cost by PV",
+ "description": "Круговая диаграмма: распределение месячных затрат по постоянным томам (PV).",
  "type": "piechart"
  }
  ],

@@ -25,6 +25,7 @@
  },
  "id": 1,
  "title": "Cluster Summary",
+ "description": "Сводный блок: общие показатели затрат по кластеру.",
  "type": "row"
  },
  {
@@ -77,6 +78,7 @@
  }
  ],
  "title": "Hourly Cost",
+ "description": "Почасовая стоимость всего кластера с учётом узлов и PV (руб.).",
  "type": "stat"
  },
  {
@@ -129,6 +131,7 @@
  }
  ],
  "title": "Daily Cost",
+ "description": "Дневная стоимость всего кластера (руб.).",
  "type": "stat"
  },
  {
@@ -181,6 +184,7 @@
  }
  ],
  "title": "Monthly Cost",
+ "description": "Месячная стоимость всего кластера (руб.).",
  "type": "stat"
  },
  {
@@ -233,6 +237,7 @@
  }
  ],
  "title": "Monthly CPU Cost",
+ "description": "Месячные затраты на CPU по кластеру (руб.).",
  "type": "stat"
  },
  {
@@ -285,6 +290,7 @@
  }
  ],
  "title": "Monthly Ram Cost",
+ "description": "Месячные затраты на RAM по кластеру (руб.).",
  "type": "stat"
  },
  {
@@ -337,6 +343,7 @@
  }
  ],
  "title": "Monthly PV Cost",
+ "description": "Месячные затраты на постоянные тома (PV) по кластеру (руб.).",
  "type": "stat"
  },
  {
@@ -377,6 +384,7 @@
  }
  ],
  "title": "Hourly Cost",
+ "description": "График почасовой стоимости кластера во времени.",
  "type": "timeseries"
  },
  {
@@ -417,6 +425,7 @@
  }
  ],
  "title": "Daily Cost",
+ "description": "График дневной стоимости кластера во времени.",
  "type": "timeseries"
  },
  {
@@ -457,6 +466,7 @@
  }
  ],
  "title": "Monthly Cost",
+ "description": "График месячной стоимости кластера во времени.",
  "type": "timeseries"
  },
  {
@@ -520,6 +530,7 @@
  }
  ],
  "title": "Cost by Resource",
+ "description": "Распределение месячных затрат по типам ресурсов: CPU, RAM, постоянные тома (PV).",
  "type": "piechart"
  },
  {
@@ -565,6 +576,7 @@
  }
  ],
  "title": "Cost by Namespace",
+ "description": "Распределение месячных затрат по неймспейсам (топ-10).",
  "type": "piechart"
  },
  {
@@ -610,6 +622,7 @@
  }
  ],
  "title": "Cost by Instance Type",
+ "description": "Распределение месячных затрат по типам инстансов узлов.",
  "type": "piechart"
  },
  {
@@ -622,6 +635,7 @@
  },
  "id": 14,
  "title": "Cloud Resources",
+ "description": "Блок: затраты на облачные ресурсы — узлы и постоянные тома.",
  "type": "row"
  },
  {
@@ -683,6 +697,7 @@
  }
  ],
  "title": "Nodes Monthly Cost",
+ "description": "Таблица месячных затрат по узлам: тип инстанса, архитектура, стоимость CPU, RAM и общая (руб.).",
  "transformations": [
  {
  "id": "merge"
@@ -779,6 +794,7 @@
  }
  ],
  "title": "Persistent Volumes Monthly Cost",
+ "description": "Таблица месячных затрат по постоянным томам: объём (GiB) и стоимость (руб.).",
  "transformations": [
  {
  "id": "merge"
@@ -815,6 +831,7 @@
  },
  "id": 17,
  "title": "Namespace Summary",
+ "description": "Блок: сводка месячных затрат по неймспейсам (топ-10).",
  "type": "row"
  },
  {
@@ -942,6 +959,7 @@
  }
  ],
  "title": "Namespace Monthly Cost",
+ "description": "Таблица месячных затрат по неймспейсам (топ-10): общая стоимость, изменение за 7 и 30 дней.",
  "transformations": [
  {
  "id": "merge"
