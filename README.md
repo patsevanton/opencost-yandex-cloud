@@ -50,8 +50,6 @@ helm install prometheus-operator-crds oci://ghcr.io/prometheus-community/charts/
 
 ## Установка VictoriaMetrics Stack
 
-Установка через OCI (без `helm repo add`):
-
 ```bash
 helm upgrade --install --wait --timeout 10m \
     vmks oci://ghcr.io/victoriametrics/helm-charts/victoria-metrics-k8s-stack \
@@ -72,8 +70,6 @@ Grafana доступна по адресу http://grafana.apatsev.org.ru (см. 
 
 ## Установка OpenCost
 
-Установка через OCI (без `helm repo add`):
-
 1. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost. В [issue #240](https://github.com/opencost/opencost-helm-chart/issues/240) описано, что данные в ConfigMap должны быть в виде плоских ключей в `data:`, иначе OpenCost их не прочитает.
 ```bash
 kubectl create namespace opencost --dry-run=client -o yaml | kubectl apply -f -
@@ -90,6 +86,45 @@ helm upgrade --install --wait \
 ```
 
 3. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
+
+## Grafana дашборды для OpenCost
+
+Чтобы смотреть стоимость в Grafana (VictoriaMetrics Stack), нужны дашборды, которые запрашивают метрики OpenCost из Prometheus/VictoriaMetrics. Ниже — варианты ручной установки.
+
+**Требование:** метрики OpenCost должны скрейпиться в VictoriaMetrics (см. [Скрейпинг метрик OpenCost](#скрейпинг-метрик-opencost)). В дашбордах в качестве Data source выберите ваш источник с метриками (например, VictoriaMetrics).
+
+### Импорт по ID с Grafana.com
+
+В Grafana: **Dashboards** → **New** → **Import** → введите ID и нажмите **Load**:
+
+| ID     | Название              | Описание |
+|--------|------------------------|----------|
+| **22208** | OpenCost / Overview   | Сводка по кластеру: почасовая/дневная/месячная стоимость, разбивка по CPU/RAM/PV, по namespace и нодам |
+| **22252** | OpenCost / Namespace  | Детализация по выбранному namespace: поды, контейнеры, PVC и их стоимость |
+
+После импорта укажите **Data source** (ваш VictoriaMetrics). В дашбордах есть переменные **Cluster** и **Job** — они заполняются из метрик OpenCost (например, `opencost_build_info` или метки скрейпа). Если меток нет, выберите вручную или оставьте значения по умолчанию.
+
+### Импорт из JSON в репозитории
+
+В каталоге `grafana-dashboards/` лежат те же дашборды в виде JSON (скачаны с Grafana.com):
+
+- `opencost-overview-22208.json` — OpenCost / Overview
+- `opencost-namespace-22252.json` — OpenCost / Namespace
+
+Импорт в Grafana: **Dashboards** → **New** → **Import** → **Upload JSON file** — укажите файл из репозитория.
+
+### Дашборды из репозитория OpenCost
+
+Официальный репозиторий [opencost/opencost-grafana-dashboard](https://github.com/opencost/opencost-grafana-dashboard) содержит дополнительные дашборды в папке `dashboards/cost-reporter`:
+
+- [opencost-cost-reporter-basic-overview.json](https://raw.githubusercontent.com/opencost/opencost-grafana-dashboard/main/dashboards/cost-reporter/opencost-cost-reporter-basic-overview.json)
+- [opencost-cost-reporter-detailed-overview.json](https://raw.githubusercontent.com/opencost/opencost-grafana-dashboard/main/dashboards/cost-reporter/opencost-cost-reporter-detailed-overview.json)
+
+Скачайте JSON и импортируйте через **Upload JSON file**. Папки `alerting`, `opencost-monitoring`, `resource-utilization` в том же репозитории пока без готовых дашбордов.
+
+### Валюта в панелях
+
+Дашборды с Grafana.com по умолчанию показывают единицу **currencyUSD**. При кастомных ценах в рублях (RUB) числовые значения в метриках уже в рублях; подпись единицы в панели при необходимости можно изменить в настройках панели (Field → Unit).
 
 ## Кастомные цены: получение и проверка данных
 

@@ -12,12 +12,12 @@ opencost:
     # Идентификатор кластера по умолчанию, если в метриках нет метки из PROM_CLUSTER_ID_LABEL (у нас — cluster)
     defaultClusterId: "test"
     # Persistence: кэш Collector DataSource сохраняется при перезапуске пода (PV/PVC, не только S3/GCS).
-    # Раскомментируйте и укажите storageClass вашего кластера (в Yandex Cloud — например yc-network-hdd или yc-network-ssd).
-    # persistence:
-    #   enabled: true
-    #   storageClass: ""   # пусто = default StorageClass
-    #   accessMode: ReadWriteOnce
-    #   size: 5Gi
+    # Укажите storageClass вашего кластера (в Yandex Cloud — например yc-network-hdd или yc-network-ssd).
+    persistence:
+      enabled: true
+      storageClass: ""   # пусто = default StorageClass
+      accessMode: ReadWriteOnce
+      size: 5Gi
     extraEnv:
       CLOUD_PROVIDER:             DEFAULT  # Провайдер облака по умолчанию
       KUBECOST_SCRAPE_INTERVAL:   5m       # Интервал сбора метрик Kubecost (минуты)
