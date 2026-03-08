@@ -104,15 +104,6 @@ helm upgrade --install --wait \
 
 После импорта укажите **Data source** (ваш VictoriaMetrics). В дашбордах есть переменные **Cluster** и **Job** — они заполняются из метрик OpenCost (например, `opencost_build_info` или метки скрейпа). Если меток нет, выберите вручную или оставьте значения по умолчанию.
 
-### Импорт из JSON в репозитории
-
-В каталоге `grafana-dashboards/` лежат те же дашборды в виде JSON (скачаны с Grafana.com):
-
-- `opencost-overview-22208.json` — OpenCost / Overview
-- `opencost-namespace-22252.json` — OpenCost / Namespace
-
-Импорт в Grafana: **Dashboards** → **New** → **Import** → **Upload JSON file** — укажите файл из репозитория.
-
 ### Дашборды из репозитория OpenCost
 
 Официальный репозиторий [opencost/opencost-grafana-dashboard](https://github.com/opencost/opencost-grafana-dashboard) содержит дополнительные дашборды в папке `dashboards/cost-reporter`:
