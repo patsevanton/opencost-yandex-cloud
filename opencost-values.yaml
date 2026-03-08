@@ -14,6 +14,7 @@ opencost:
     # Persistence кэш Collector DataSource - внутреннего кеша Opencost
     persistence:
       enabled: true
+      size: 10Gi   # явный размер — иначе чарт может подставить невалидный quantity для PVC
     extraEnv:
       CLOUD_PROVIDER:             DEFAULT  # Провайдер облака DEFAULT, если у вас используется Yandex Cloud
       KUBECOST_SCRAPE_INTERVAL:   5m       # Интервал сбора метрик из VictoriaMetrics K8s stack
