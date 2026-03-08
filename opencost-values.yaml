@@ -14,6 +14,7 @@ opencost:
     # Persistence кэш Collector DataSource - внутреннего кеша Opencost
     persistence:
       enabled: true
+      accessMode: ReadWriteOnce   # чарт по умолчанию пустой — без него PVC невалиден
       size: 10Gi   # явный размер — иначе чарт может подставить невалидный quantity для PVC
     extraEnv:
       CLOUD_PROVIDER:             DEFAULT  # Провайдер облака DEFAULT, если у вас используется Yandex Cloud
