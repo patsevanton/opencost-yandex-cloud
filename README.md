@@ -74,7 +74,30 @@ helm upgrade --install --wait \
 
 ## Grafana дашборды для OpenCost
 
-Чтобы смотреть стоимость в Grafana (VictoriaMetrics Stack), используйте четыре переработанных дашборда: [`opencost-overview.json`](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-overview.json), [`opencost-namespace.json`](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-namespace.json), [`opencost-cost-reporter-basic-overview.json`](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-basic-overview.json) и [`opencost-cost-reporter-detailed-overview.json`](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-detailed-overview.json). В дашбордах для панелей с PV уже исправлена проблема `No data`, потому что вместо `kube_persistentvolume_capacity_bytes{job=~"$job"}` используется источник `job="kube-state-metrics"`, тогда как метрики OpenCost остаются с `job="opencost"`. В Grafana достаточно выбрать ваш `Data source`, а для переменной `Job` использовать `opencost`; подробнее — в [grafana-dashboards/README.md](grafana-dashboards/README.md).
+Ниже приведены ссылки на четыре переработанных дашборда для Grafana:
+
+| Файл | GitHub | Описание |
+|------|--------|----------|
+| **opencost-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-overview.json) | OpenCost / Overview (Grafana.com ID 22208) |
+| **opencost-namespace.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-namespace.json) | OpenCost / Namespace (Grafana.com ID 22252) |
+| **opencost-cost-reporter-basic-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-basic-overview.json) | Cost reporter - базовый обзор |
+| **opencost-cost-reporter-detailed-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-detailed-overview.json) | Cost reporter - детальный обзор |
+
+### В чём исправление
+
+Проблема `No data` возникала в дашбордах `opencost-overview.json` и `opencost-namespace.json` на панелях Hourly/Daily/Monthly Cost и PV. Метрика `kube_persistentvolume_capacity_bytes` в VictoriaMetrics K8s Stack приходит от `kube-state-metrics` с `job="kube-state-metrics"`, а не от OpenCost с `job="opencost"`. В оригинальных дашбордах использовался фильтр `kube_persistentvolume_capacity_bytes{job=~"$job"}`, поэтому при выбранном `Job = opencost` запрос возвращал пустой результат.
+
+В исправленных дашбордах для `kube_persistentvolume_capacity_bytes` в фильтре указан источник `job="kube-state-metrics"`. Дашборды `opencost-cost-reporter-basic-overview.json` и `opencost-cost-reporter-detailed-overview.json` этой правки не требовали. Переменную `Job` в дашборде оставляйте `opencost`.
+
+### Установка
+
+1. Откройте ссылку на нужный JSON из таблицы выше и скачайте файл.
+2. В Grafana откройте `Dashboards` -> `New` -> `Import` -> `Upload JSON file`.
+3. Выберите скачанный JSON-файл.
+4. Укажите `Data source` для VictoriaMetrics.
+5. Для переменной `Job` выберите `opencost` (или актуальное значение из метрик OpenCost).
+
+Импорт выполняется по одному файлу; при необходимости сохраните дашборд под своим именем.
 
 ### Валюта в панелях
 
