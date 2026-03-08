@@ -89,35 +89,7 @@ helm upgrade --install --wait \
 
 ## Grafana дашборды для OpenCost
 
-Чтобы смотреть стоимость в Grafana (VictoriaMetrics Stack), нужны дашборды, которые запрашивают метрики OpenCost из Prometheus/VictoriaMetrics. Ниже — варианты ручной установки.
-
-**Требование:** метрики OpenCost должны скрейпиться в VictoriaMetrics (см. [Скрейпинг метрик OpenCost](#скрейпинг-метрик-opencost)). В дашбордах в качестве Data source выберите ваш источник с метриками (например, VictoriaMetrics).
-
-### Импорт по ID с Grafana.com
-
-В Grafana: **Dashboards** → **New** → **Import** → введите ID и нажмите **Load**:
-
-| ID     | Название              | Описание |
-|--------|------------------------|----------|
-| **22208** | OpenCost / Overview   | Сводка по кластеру: почасовая/дневная/месячная стоимость, разбивка по CPU/RAM/PV, по namespace и нодам |
-| **22252** | OpenCost / Namespace  | Детализация по выбранному namespace: поды, контейнеры, PVC и их стоимость |
-
-После импорта укажите **Data source** (ваш VictoriaMetrics). В дашбордах есть переменные **Cluster** и **Job** — они заполняются из метрик OpenCost (например, `opencost_build_info` или метки скрейпа). Если меток нет, выберите вручную или оставьте значения по умолчанию.
-
-### Готовые дашборды с исправлением
-
-**Причина «No data» в дашбордах по умолчанию:** в формулах используется метрика `kube_persistentvolume_capacity_bytes{job=~"$job"}`. В стеке VMKS эта метрика приходит от **kube-state-metrics** с `job="kube-state-metrics"`, а метрики OpenCost — с `job="opencost"`. При выбранной переменной **Job** = opencost запрос по `kube_persistentvolume_capacity_bytes` возвращает пустой результат; в PromQL выражение «скаляр + пустой vector» не даёт ряда, поэтому панель показывает «No data».
-
-В дашбордах из директории [grafana-dashboards/](grafana-dashboards/) для `kube_persistentvolume_capacity_bytes` уже подставлен `job="kube-state-metrics"`. Импортируйте нужный JSON через **Upload JSON file**, укажите Data source и в переменной **Job** выберите **opencost**. Подробнее — в [grafana-dashboards/README.md](grafana-dashboards/README.md).
-
-### Дашборды из репозитория OpenCost
-
-Официальный репозиторий [opencost/opencost-grafana-dashboard](https://github.com/opencost/opencost-grafana-dashboard) содержит дополнительные дашборды в папке `dashboards/cost-reporter`:
-
-- [opencost-cost-reporter-basic-overview.json](https://raw.githubusercontent.com/opencost/opencost-grafana-dashboard/main/dashboards/cost-reporter/opencost-cost-reporter-basic-overview.json)
-- [opencost-cost-reporter-detailed-overview.json](https://raw.githubusercontent.com/opencost/opencost-grafana-dashboard/main/dashboards/cost-reporter/opencost-cost-reporter-detailed-overview.json)
-
-Скачайте JSON и импортируйте через **Upload JSON file**. Папки `alerting`, `opencost-monitoring`, `resource-utilization` в том же репозитории пока без готовых дашбордов.
+Чтобы смотреть стоимость в Grafana (VictoriaMetrics Stack), используйте четыре переработанных дашборда из директории [grafana-dashboards/](grafana-dashboards/): `opencost-overview.json`, `opencost-namespace.json`, `opencost-cost-reporter-basic-overview.json` и `opencost-cost-reporter-detailed-overview.json`. В дашбордах для панелей с PV уже исправлена проблема `No data`, потому что вместо `kube_persistentvolume_capacity_bytes{job=~"$job"}` используется источник `job="kube-state-metrics"`, тогда как метрики OpenCost остаются с `job="opencost"`. В Grafana достаточно выбрать ваш `Data source`, а для переменной `Job` использовать `opencost`; подробнее — в [grafana-dashboards/README.md](grafana-dashboards/README.md).
 
 ### Валюта в панелях
 
