@@ -1101,6 +1101,7 @@
  "to": "now"
  },
  "timezone": "utc",
+ "refresh": "1m",
  "title": "OpenCost / Namespace",
  "uid": "opencost-mixin-namespace-jkwq",
  "gnetId": 22252

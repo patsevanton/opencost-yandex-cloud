@@ -165,9 +165,7 @@ spec:
 
 В веб-интерфейсе OpenCost (порт 9090) есть выпадающий список **«Aggregate by»** (Namespace, Deployment, Pod и т.д.). Варианта «по лейблу team» в стандартной сборке может не быть — его можно открыть **через URL**, добавив параметр `agg=label:team`:
 
-```
-http://opencost.apatsev.org.ru/allocation?window=7d&agg=label:team&acc=true
-```
+<http://opencost.apatsev.org.ru/allocation?window=7d&agg=label:team&acc=true>
 
 Так откроется отчёт за 7 дней, сгруппированный по командам (включая `metrics` и `finops`). Важно: в URL веб-интерфейса используется параметр `agg`, а в API и MCP для той же логики используется `aggregate=label:team`.
 

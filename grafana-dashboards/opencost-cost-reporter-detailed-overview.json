@@ -2571,7 +2571,7 @@
  "type": "row"
  }
  ],
- "refresh": false,
+ "refresh": "1m",
  "schemaVersion": 37,
  "style": "dark",
  "tags": [],
