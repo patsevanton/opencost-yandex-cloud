@@ -1,9 +1,8 @@
-# Лейблы подов для группировки в OpenCost (aggregate=label:team) — стоимость по командам
 vmsingle:
   spec:
     podMetadata:
       labels:
-        team: metrics
+        team: metrics # Лейбл для группировки в OpenCost (aggregate=label:team) — стоимость по командам
   ingress:
     enabled: true
     ingressClassName: nginx
@@ -12,14 +11,11 @@ vmsingle:
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
     hosts:
       - vmsingle.apatsev.org.ru
-
 vmagent:
   spec:
     podMetadata:
       labels:
-        team: metrics
-
-# Grafana — подчарт использует podLabels, не spec.podMetadata
+        team: metrics # Лейбл для группировки в OpenCost (aggregate=label:team) — стоимость по командам
 grafana:
   podLabels:
     team: metrics
@@ -30,31 +26,22 @@ grafana:
       nginx.ingress.kubernetes.io/ssl-redirect: "false"
     hosts:
       - grafana.apatsev.org.ru
-
 vmalert:
   spec:
     podMetadata:
       labels:
-        team: metrics
-
-# В VMKS чарте ключ — alertmanager (не vmalertmanager); spec уходит в CR VMAlertmanager (поддерживает podMetadata)
+        team: metrics # Лейбл для группировки в OpenCost (aggregate=label:team) — стоимость по командам
 alertmanager:
   spec:
     podMetadata:
       labels:
         team: metrics
-
-# Подчарт prometheus-node-exporter (ключ с дефисами); лейблы — через podLabels
 prometheus-node-exporter:
   podLabels:
-    team: metrics
-
-# Подчарт kube-state-metrics; лейблы — через podLabels
+    team: metrics # Лейбл для группировки в OpenCost (aggregate=label:team) — стоимость по командам
 kube-state-metrics:
   podLabels:
-    team: metrics
-
-# Подчарт victoria-metrics-operator; лейблы пода оператора — через podLabels (не spec)
+    team: metrics # Лейбл для группировки в OpenCost (aggregate=label:team) — стоимость по командам
 victoria-metrics-operator:
   podLabels:
-    team: metrics
+    team: metrics # Лейбл для группировки в OpenCost (aggregate=label:team) — стоимость по командам

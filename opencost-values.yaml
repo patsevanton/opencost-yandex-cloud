@@ -14,8 +14,8 @@ opencost:
     # Сохранять внутренний кэш OpenCost на PVC, чтобы он не терялся при рестарте пода
     persistence:
       enabled: true
-      accessMode: ReadWriteOnce   # чарт по умолчанию пустой — без него PVC невалиден
-      size: 10Gi   # явный размер — иначе чарт может подставить невалидный quantity для PVC
+      accessMode: ReadWriteOnce   # accessMode по умолчанию пустой — без него PVC невалиден
+      size: 10Gi   # size по умолчанию пустой — без него PVC невалиден
     extraEnv:
       CLOUD_PROVIDER:             DEFAULT  # Провайдер облака DEFAULT, если у вас используется Yandex Cloud
       KUBECOST_SCRAPE_INTERVAL:   5m       # Интервал сбора метрик из VictoriaMetrics K8s stack
