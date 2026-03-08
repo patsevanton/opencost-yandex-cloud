@@ -111,6 +111,9 @@ resource "helm_release" "ingress_nginx" {
   values = [
     yamlencode({
       controller = {
+        podLabels = {
+          team = "ingress"
+        }
         service = {
           loadBalancerIP = yandex_vpc_address.addr.external_ipv4_address[0].address
         }
