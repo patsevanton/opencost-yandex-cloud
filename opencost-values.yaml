@@ -39,6 +39,13 @@ opencost:
     ingress:
       enabled: true
       ingressClassName: "nginx"
+      # Редирект при отсутствии currency в URL: по умолчанию UI показывает USD, хотя в custom pricing указано RUB.
+      # OpenCost UI берёт валюту только из query-параметра currency; без редиректа всегда отображается USD.
+      annotations:
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+          if ($args !~ "currency=") {
+            return 302 $scheme://$host$uri?$args&currency=RUB;
+          }
       hosts:
       - host: opencost.apatsev.org.ru
         paths:

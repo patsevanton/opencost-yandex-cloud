@@ -117,31 +117,3 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts"
 Прямого API для получения списаний у Yandex Cloud нет — фактические расходы доступны только через CSV-экспорт в Object Storage и Yandex Query. Для интеграции с OpenCost наиболее реалистичен **OpenCost Plugin**, читающий CSV-детализацию из Object Storage через S3-совместимый API.
 
 Возможно, в будущем найдутся люди, которые напишут полноценную интеграцию Yandex Cloud с OpenCost — как кастомный Cloud Costs провайдер или плагин. Это открытый проект, и вклад от сообщества приветствуется через [opencost-plugins](https://github.com/opencost/opencost-plugins).
-
-
-## 7. Чек-лист проверки
-
-| Шаг | Действие | Команда/ссылка |
-|--|--|--|
-| 1 | Получить IAM-токен | `yc iam create-token` или POST на `iam.api.cloud.yandex.net/iam/v1/tokens` |
-| 2 | Проверить доступ к Billing API | `curl ... billing.api.cloud.yandex.net/billing/v1/billingAccounts` с заголовком `Authorization: Bearer $IAM_TOKEN` |
-| 3 | Убедиться в правах на биллинг | Роли `billing.accounts.owner` / `admin` / `editor` |
-| 4 | Настроить детализацию (если нужно) | Консоль биллинга → экспорт в CSV / в бакет; при необходимости — Yandex Query |
-
-## 8. Связь с OpenCost
-
-В этом репозитории использование Billing API и детализации Yandex Cloud рассматривается для:
-
-- проверки фактических расходов (сверка с расчётом OpenCost по тарифам);
-- возможной будущей интеграции Cloud Costs или кастомного экспорта в OpenCost (Yandex Cloud пока не в списке официально поддерживаемых провайдеров Cloud Costs).
-
-См. [README.md](README.md).
-
-## Ссылки
-
-- [Получение детализации через API](https://yandex.cloud/ru/docs/billing/operations/get-charges-via-api)
-- [Billing API, BillingAccount.List](https://yandex.cloud/en/docs/billing/api-ref/BillingAccount/list)
-- [Экспортировать расширенную детализацию (get-folder-report)](https://yandex.cloud/ru/docs/billing/operations/get-folder-report)
-- [Yandex Query — запросы к данным детализации](https://yandex.cloud/ru-kz/docs/billing/operations/query-integration)
-- [IAM Token Create](https://yandex.cloud/en/docs/iam/api-ref/IamToken/create)
-- [opencost-plugins](https://github.com/opencost/opencost-plugins)
