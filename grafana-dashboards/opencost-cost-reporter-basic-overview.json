@@ -91,7 +91,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": []
  },
@@ -192,7 +192,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": []
  },
@@ -254,7 +254,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": []
  },
@@ -534,7 +534,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": [
  {
@@ -645,7 +645,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": [
  {
@@ -756,7 +756,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": [
  {
@@ -888,7 +888,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": []
  },
@@ -987,7 +987,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": []
  },
@@ -1074,7 +1074,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": [
  {
@@ -1692,7 +1692,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": []
  },

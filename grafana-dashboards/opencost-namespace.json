@@ -47,7 +47,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -100,7 +100,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -153,7 +153,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -206,7 +206,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -259,7 +259,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -312,7 +312,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -355,7 +355,7 @@
  "custom": {
  "spanNulls": false
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -395,7 +395,7 @@
  "custom": {
  "spanNulls": false
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -432,7 +432,7 @@
  },
  "fieldConfig": {
  "defaults": {
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -523,7 +523,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": [
  {
@@ -660,7 +660,7 @@
  },
  "fieldConfig": {
  "defaults": {
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -733,7 +733,7 @@
  }
  ]
  },
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  },
  "overrides": [
  {
@@ -870,7 +870,7 @@
  },
  "fieldConfig": {
  "defaults": {
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
@@ -938,7 +938,7 @@
  "properties": [
  {
  "id": "unit",
- "value": "currencyUSD"
+ "value": "currencyRUB"
  }
  ]
  }
@@ -1018,7 +1018,7 @@
  },
  "fieldConfig": {
  "defaults": {
- "unit": "currencyUSD"
+ "unit": "currencyRUB"
  }
  },
  "gridPos": {
