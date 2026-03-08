@@ -67,22 +67,14 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts"
   -H "Content-Type: application/json"
 ```
 
-**Ожидаемый ответ при успехе:** JSON со списком `billingAccounts` (id, name, balance, currency и т.д.) и при пагинации — `nextPageToken`.
+**Ожидаемый ответ при успехе:** JSON со списком `billingAccounts` (id, name, balance, currency и т.д.).
 
 **Типичные ошибки:**
 
 - `401 Unauthorized` — неверный или просроченный IAM-токен.
 - `403 Forbidden` — нет прав на биллинг (нужны роли выше).
 
-### 4.2. Пагинация
-
-```bash
-curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/billingAccounts?pageSize=10&pageToken=<nextPageToken>" \
-  -H "Authorization: Bearer $IAM_TOKEN" \
-  -H "Content-Type: application/json"
-```
-
-### 4.3. Другие методы Billing API
+### 4.2. Другие методы Billing API
 
 В [справочнике Billing API](https://yandex.cloud/ru/docs/billing/api-ref/) описаны, в том числе:
 
