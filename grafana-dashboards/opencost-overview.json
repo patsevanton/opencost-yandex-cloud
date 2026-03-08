@@ -995,24 +995,12 @@
  "refresh": 2,
  "sort": 1,
  "type": "query"
- },
- {
- "datasource": {
- "type": "prometheus",
- "uid": "${datasource}"
- },
- "label": "Namespace",
- "name": "namespace",
- "query": "label_values(kube_namespace_labels, namespace)",
- "refresh": 2,
- "sort": 1,
- "type": "query"
  }
  ]
  },
- "time": {
- "from": "now-7d",
- "to": "now"
+"time": {
+  "from": "now-1h",
+  "to": "now"
  },
  "timezone": "utc",
  "refresh": "1m",
