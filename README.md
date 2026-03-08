@@ -104,6 +104,12 @@ helm upgrade --install --wait \
 
 После импорта укажите **Data source** (ваш VictoriaMetrics). В дашбордах есть переменные **Cluster** и **Job** — они заполняются из метрик OpenCost (например, `opencost_build_info` или метки скрейпа). Если меток нет, выберите вручную или оставьте значения по умолчанию.
 
+### Готовые дашборды с исправлением
+
+**Причина «No data» в дашбордах по умолчанию:** в формулах используется метрика `kube_persistentvolume_capacity_bytes{job=~"$job"}`. В стеке VMKS эта метрика приходит от **kube-state-metrics** с `job="kube-state-metrics"`, а метрики OpenCost — с `job="opencost"`. При выбранной переменной **Job** = opencost запрос по `kube_persistentvolume_capacity_bytes` возвращает пустой результат; в PromQL выражение «скаляр + пустой vector» не даёт ряда, поэтому панель показывает «No data».
+
+В дашбордах из директории [grafana-dashboards/](grafana-dashboards/) для `kube_persistentvolume_capacity_bytes` уже подставлен `job="kube-state-metrics"`. Импортируйте нужный JSON через **Upload JSON file**, укажите Data source и в переменной **Job** выберите **opencost**. Подробнее — в [grafana-dashboards/README.md](grafana-dashboards/README.md).
+
 ### Дашборды из репозитория OpenCost
 
 Официальный репозиторий [opencost/opencost-grafana-dashboard](https://github.com/opencost/opencost-grafana-dashboard) содержит дополнительные дашборды в папке `dashboards/cost-reporter`:
