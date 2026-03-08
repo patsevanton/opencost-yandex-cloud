@@ -292,38 +292,3 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
 
 Подключение OpenCost через MCP (для AI-ассистентов) описано в [mcp.md](mcp.md).
-
-### Получение метрик через kubectl
-
-Метрики отдаются на порту **9003**, путь `/metrics`. Варианты:
-
-**1. Port-forward и curl (удобно для просмотра локально):**
-```bash
-# В одном терминале — поднять туннель
-kubectl port-forward -n opencost svc/opencost 9003:9003
-
-# В другом — только названия метрик (без значений и комментариев)
-curl -s http://localhost:9003/metrics | grep -v '^#' | awk '{print $1}' | sed 's/{.*//' | grep . | sort -u > opencost_metrics.txt
-```
-
-**2. Сравнение метрик из файла с VictoriaMetrics (без port-forward):**
-
-```bash
-# из корня репозитория
-python3 scripts/compare_vm_metrics.py \
-  --vm-url http://vmsingle.apatsev.org.ru \
-  --file opencost_metrics.txt
-```
-
-**3. Проверка использования метрик в дашбордах Grafana:**
-
-Скрипт `scripts/grafana_dashboard_metrics.py` по списку метрик (например, из вывода `compare_vm_metrics.py`) опрашивает Grafana API и выводит, в каких дашбордах встречается каждая метрика. Запуск:
-
-Команда ниже задаёт `GRAFANA_API_KEY` из секрета `vmks-grafana` в кластере, получает список метрик через `compare_vm_metrics.py` (VictoriaMetrics и `opencost_metrics.txt`), пропускает первую строку вывода и передаёт список в `grafana_dashboard_metrics.py`, который выводит, в каких дашбордах Grafana эти метрики используются.
-```bash
-export GRAFANA_API_KEY="admin:$(kubectl get secret vmks-grafana -n vmks -o jsonpath='{.data.admin-password}' | base64 -d)"
-python3 scripts/compare_vm_metrics.py --vm-url http://vmsingle.apatsev.org.ru --file opencost_metrics.txt 2>/dev/null | tail -n +2 \
-  | python3 scripts/grafana_dashboard_metrics.py --grafana-url http://grafana.apatsev.org.ru \
-  | tee opencost_vm_matching_metrics.txt
-
-```
