@@ -6,7 +6,8 @@
  "description": "",
  "type": "datasource",
  "pluginId": "prometheus",
- "pluginName": "Prometheus"
+ "pluginName": "Prometheus",
+ "value": "VictoriaMetrics"
  }
  ],
  "__elements": {},
