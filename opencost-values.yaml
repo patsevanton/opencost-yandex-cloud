@@ -10,23 +10,19 @@ opencost:
 
   exporter:
     # Идентификатор кластера по умолчанию, если в метриках нет метки из PROM_CLUSTER_ID_LABEL (у нас — cluster)
-    defaultClusterId: "test"
-    # Persistence: кэш Collector DataSource сохраняется при перезапуске пода (PV/PVC, не только S3/GCS).
-    # Укажите storageClass вашего кластера (в Yandex Cloud — например yc-network-hdd или yc-network-ssd).
+    #defaultClusterId: "test"
+    # Persistence кэш Collector DataSource - внутреннего кеша Opencost
     persistence:
       enabled: true
-      storageClass: ""   # пусто = default StorageClass
-      accessMode: ReadWriteOnce
-      size: 5Gi
     extraEnv:
-      CLOUD_PROVIDER:             DEFAULT  # Провайдер облака по умолчанию
-      KUBECOST_SCRAPE_INTERVAL:   5m       # Интервал сбора метрик Kubecost (минуты)
-      PROM_CLUSTER_ID_LABEL:      cluster  # Метка кластера для Prometheus
+      CLOUD_PROVIDER:             DEFAULT  # Провайдер облака DEFAULT, если у вас используется Yandex Cloud
+      KUBECOST_SCRAPE_INTERVAL:   5m       # Интервал сбора метрик из VictoriaMetrics K8s stack
+      #PROM_CLUSTER_ID_LABEL:      cluster  # Метка кластера для Prometheus
       USE_CUSTOM_PROVIDER:        true     # Использовать кастомного облачного провайдера
       # Не дублировать kube_* метрики (уже отдаёт kube-state-metrics) — иначе sum(kube_pod_*) в Grafana даёт 2x
       # https://github.com/opencost/opencost/issues/1465
       EMIT_KSM_V1_METRICS:       "false"  # не отдавать полный набор KSM-метрик
-      EMIT_KSM_V1_METRICS_ONLY:  "true"   # только минимальный набор KSMv1 для OpenCost (поддерживается чартом и приложением OpenCost)
+      EMIT_KSM_V1_METRICS_ONLY:  "true"   # только минимальный набор KSMv1 для OpenCost
   prometheus:
     internal:
       serviceName: vmsingle-vmks-victoria-metrics-k8s-stack
