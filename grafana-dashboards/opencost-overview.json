@@ -1,7 +1,7 @@
 {
  "__inputs": [],
  "__requires": [],
- "description": "A dashboard that monitors OpenCost and focuses on giving a overview for OpenCost. It is created using the [OpenCost-mixin](https://github.com/adinhodovic/opencost-mixin).",
+ "description": "Обзор мониторинга OpenCost: сводка по кластеру, почасовая стоимость. Создан на основе OpenCost-mixin.",
  "editable": true,
  "links": [
  {

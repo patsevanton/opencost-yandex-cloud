@@ -1,7 +1,7 @@
 {
  "__inputs": [],
  "__requires": [],
- "description": "A dashboard that monitors OpenCost and focuses on namespace costs. It is created using the [opencost-mixin](https://github.com/adinhodovic/opencost-mixin).",
+ "description": "Затраты OpenCost по неймспейсам Kubernetes. Создан на основе opencost-mixin.",
  "editable": true,
  "links": [
  {

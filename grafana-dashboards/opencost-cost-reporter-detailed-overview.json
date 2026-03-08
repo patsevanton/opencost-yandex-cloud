@@ -61,7 +61,7 @@
  }
  ]
  },
- "description": "",
+ "description": "Детальный обзор затрат OpenCost: узлы, диски, поды и контейнеры по кластеру.",
  "editable": true,
  "fiscalYearStartMonth": 0,
  "gnetId": 11270,

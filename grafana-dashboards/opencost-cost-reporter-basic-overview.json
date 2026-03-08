@@ -54,6 +54,7 @@
  "graphTooltip": 0,
  "id": null,
  "links": [],
+ "description": "Краткий обзор затрат OpenCost по кластеру: узлы, диски, текущее использование.",
  "liveNow": false,
  "panels": [
  {
