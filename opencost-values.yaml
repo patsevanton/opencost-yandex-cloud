@@ -3,15 +3,15 @@ podLabels:
   team: finops
 
 opencost:
-  # --- Collector DataSource OpenCost (внутренний кэш агрегатов стоимости) ---
-  # Хранилище: внутри пода OpenCost (не VictoriaMetrics). Срок хранения кэша:
+  # Внутренний кэш агрегатов стоимости OpenCost (Collector DataSource).
+  # Это не VictoriaMetrics: кэш хранится локально в поде OpenCost.
   retention1d: 15   # интервалов по 1 дню — хранить 15 дней данных с дневным разрешением
   retention1h: 49   # интервалов по 1 ч — хранить 49 часов данных с часовым разрешением
 
   exporter:
     # Идентификатор кластера по умолчанию, если в метриках нет метки из PROM_CLUSTER_ID_LABEL (у нас — cluster)
     #defaultClusterId: "test"
-    # Persistence кэш Collector DataSource - внутреннего кеша Opencost
+    # Сохранять внутренний кэш OpenCost на PVC, чтобы он не терялся при рестарте пода
     persistence:
       enabled: true
       accessMode: ReadWriteOnce   # чарт по умолчанию пустой — без него PVC невалиден
