@@ -10,12 +10,12 @@
 
 ## Файлы
 
-| Файл | Описание | Исправление |
-|------|----------|-------------|
-| **opencost-overview.json** | OpenCost / Overview (Grafana.com ID 22208) | Да: все формулы с PV |
-| **opencost-namespace.json** | OpenCost / Namespace (Grafana.com ID 22252) | Да: формулы с PV по namespace |
-| **opencost-cost-reporter-basic-overview.json** | Cost reporter — базовый обзор | Не требуется (нет запросов по PV capacity с $job) |
-| **opencost-cost-reporter-detailed-overview.json** | Cost reporter — детальный обзор | Не требуется |
+| Файл | GitHub | Описание | Исправление |
+|------|--------|----------|-------------|
+| **opencost-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-overview.json) | OpenCost / Overview (Grafana.com ID 22208) | Да: все формулы с PV |
+| **opencost-namespace.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-namespace.json) | OpenCost / Namespace (Grafana.com ID 22252) | Да: формулы с PV по namespace |
+| **opencost-cost-reporter-basic-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-basic-overview.json) | Cost reporter — базовый обзор | Не требуется (нет запросов по PV capacity с $job) |
+| **opencost-cost-reporter-detailed-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-detailed-overview.json) | Cost reporter — детальный обзор | Не требуется |
 
 ## Установка
 
