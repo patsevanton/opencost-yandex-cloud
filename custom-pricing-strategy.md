@@ -80,22 +80,13 @@
 
 ### 3.1. Проверка формата и формул (локально)
 
-Скрипт **`scripts/validate_custom_pricing.py`** (см. ниже) позволяет:
+Перед применением ConfigMap стоит вручную проверить:
 
-- Прочитать ConfigMap из YAML-файла или из кластера (`kubectl get configmap ... -o yaml`).
-- Проверить наличие обязательных ключей (`provider`, `CPU`, `RAM`, `storage`, опционально egress и LB).
-- Проверить, что значения — числа в разумных диапазонах (например, CPU/RAM/storage положительные, не нули).
-- Опционально: проверить согласованность «почасовая ставка × 730 = месячная» для CPU/RAM/storage, если в комментариях или отдельном файле указаны почасовые эталоны.
+- Наличие обязательных ключей: `provider`, `CPU`, `RAM`, `storage` (опционально egress и LB).
+- Что значения — числа в разумных диапазонах (CPU/RAM/storage положительные, не нули).
+- Согласованность «почасовая ставка × 730 = месячная» для CPU/RAM/storage, если в комментариях указаны почасовые эталоны.
 
-Запуск:
-
-```bash
-# из корня репозитория
-python3 scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml
-
-# из кластера
-kubectl get configmap custom-pricing-model -n opencost -o yaml | python3 scripts/validate_custom_pricing.py --stdin
-```
+ConfigMap можно взять из файла `custom-pricing-configmap.yaml` или из кластера: `kubectl get configmap custom-pricing-model -n opencost -o yaml`.
 
 ### 3.2. Проверка внутри кластера (OpenCost использует ConfigMap)
 
@@ -136,6 +127,5 @@ kubectl get configmap custom-pricing-model -n opencost -o yaml | python3 scripts
 | 2 | Выписать почасовые цены vCPU, RAM, диск (и при необходимости трафик). |
 | 3 | Посчитать месячные: значение × 730 для CPU, RAM, storage. |
 | 4 | Обновить `custom-pricing-configmap.yaml`, сохранить комментарии с формулой (₽/час и × 730). |
-| 5 | Запустить `scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml`. |
-| 6 | Применить ConfigMap, при необходимости перезапустить OpenCost. |
-| 7 | Проверить метрики/UI OpenCost и при возможности сверить с биллингом за период. |
+| 5 | Применить ConfigMap, при необходимости перезапустить OpenCost. |
+| 6 | Проверить метрики/UI OpenCost и при возможности сверить с биллингом за период. |
