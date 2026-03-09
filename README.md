@@ -94,30 +94,7 @@ python3 scripts/fetch_yandex_sku_prices.py
 python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 ```
 
-Токен можно не задавать, если установлен CLI `yc` — скрипт вызовет `yc iam create-token`. После обновления ConfigMap запустите валидацию и при необходимости примените манифест в кластер (см. [Чек-лист обновления тарифов](#чек-лист-обновления-тарифов)).
-
-### Как проверять
-
-1. **Локально (перед применением)** — скрипт проверяет наличие обязательных ключей и что числовые значения в разумных диапазонах:
-```bash
-python3 scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml
-```
-Проверка ConfigMap из кластера: `kubectl get configmap custom-pricing-model -n opencost -o yaml | python3 scripts/validate_custom_pricing.py --stdin`
-
-2. **В кластере** — после `kubectl apply` при необходимости перезапустить под OpenCost; убедиться в UI или по метрикам (`node_cpu_hourly_cost`, `node_total_hourly_cost`), что стоимость нод и аллокаций не нулевая и не аномальная.
-
-3. **Сверка с биллингом** — за выбранный период сравнить сумму из Allocation API с фактическими списаниями (экспорт детализации в Object Storage или Yandex Query). Подробнее: [см. раздел «Биллинг Yandex Cloud и интеграция с OpenCost»](#биллинг-yandex-cloud-и-интеграция-с-opencost).
-
-### Чек-лист обновления тарифов
-
-1. Взять актуальные почасовые цены из [тарификации](https://cloud.yandex.ru/docs/compute/pricing) (ваш регион).  
-2. Посчитать месячные: vCPU/RAM/диск × 730.  
-3. Обновить `custom-pricing-configmap.yaml`, оставить комментарии с формулой.  
-4. Запустить `scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml`.  
-5. Применить ConfigMap, при необходимости перезапустить OpenCost.  
-6. Проверить метрики/UI и при возможности сверить с биллингом.
-
-Подробное описание полей ConfigMap, источников и проверок — в [custom-pricing-strategy.md](custom-pricing-strategy.md).
+Токен можно не задавать, если установлен CLI `yc` — скрипт вызовет `yc iam create-token`. После обновления ConfigMap запустите валидацию и при необходимости примените манифест в кластер. Подробнее: [custom-pricing-strategy.md](custom-pricing-strategy.md).
 
 ## Стоимость по командам (team cost)
 
