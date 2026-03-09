@@ -60,7 +60,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
   }
 
   instance_template {
-    platform_id = "standard-v2"
+    platform_id = "standard-v3"
 
     network_interface {
       nat = true
@@ -77,7 +77,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
     }
 
     boot_disk {
-      type = "network-ssd"
+      type = "network-hdd"
       size = 33
     }
   }
