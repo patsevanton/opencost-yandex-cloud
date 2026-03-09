@@ -161,15 +161,23 @@ def match_skus(skus: list[dict]) -> dict[str, float]:
         if ("gbyte" in unit and "hour" not in unit) or "traffic" in text or "трафик" in text or "egress" in text or "исходящ" in text:
             egress_candidates.append((price, _get(sku, "name") or ""))
 
+    # Берём минимальную положительную цену (SKU с ценой 0 — бесплатные/служебные)
+    def _min_positive(candidates: list[tuple[float, str]]) -> float | None:
+        prices = [c[0] for c in candidates if c[0] > 0]
+        return min(prices) if prices else None
+
     if cpu_candidates:
-        price = min(c[0] for c in cpu_candidates)
-        result["CPU"] = round(price * HOURS_PER_MONTH, 3)
+        price = _min_positive(cpu_candidates)
+        if price is not None:
+            result["CPU"] = round(price * HOURS_PER_MONTH, 3)
     if ram_candidates:
-        price = min(c[0] for c in ram_candidates)
-        result["RAM"] = round(price * HOURS_PER_MONTH, 3)
+        price = _min_positive(ram_candidates)
+        if price is not None:
+            result["RAM"] = round(price * HOURS_PER_MONTH, 3)
     if storage_candidates:
-        price = min(c[0] for c in storage_candidates)
-        result["storage"] = round(price * HOURS_PER_MONTH, 3)
+        price = _min_positive(storage_candidates)
+        if price is not None:
+            result["storage"] = round(price * HOURS_PER_MONTH, 3)
     if egress_candidates:
         price = min(c[0] for c in egress_candidates)
         result["zoneNetworkEgress"] = result["regionNetworkEgress"] = result["internetNetworkEgress"] = round(price, 4)
