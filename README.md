@@ -83,7 +83,7 @@ helm upgrade --install --wait \
 
 ### Автоматическое обновление ConfigMap из Billing API
 
-Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через Sku.List, подбирает SKU для vCPU, RAM, диска и исходящего трафика и может обновить `custom-pricing-configmap.yaml`:
+Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). Скрипт подбирает нужные SKU и может обновить `custom-pricing-configmap.yaml`:
 
 ```bash
 export IAM_TOKEN=$(yc iam create-token)
