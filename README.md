@@ -81,18 +81,21 @@ helm upgrade --install --wait \
 
 ### Автоматическое обновление ConfigMap из Billing API
 
-Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). Скрипт подбирает нужные SKU и может обновить `custom-pricing-configmap.yaml`:
+Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). Скрипт подбирает нужные SKU и может обновить в ConfigMap поля **CPU, RAM, storage**. В Billing API нет однозначного ответа по тарифам на сетевой egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации).
 
 ```bash
 export IAM_TOKEN=$(yc iam create-token)
 # Показать подобранные цены (рубли), не менять файлы:
 python3 scripts/fetch_yandex_sku_prices.py
 
+# Вывести список всех SKU из каталога (для сверки с полями ConfigMap):
+python3 scripts/fetch_yandex_sku_prices.py --list-skus
+
 # Обновить custom-pricing-configmap.yaml:
 python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 ```
 
-Токен можно не задавать, если установлен CLI `yc` — скрипт вызовет `yc iam create-token`. После обновления ConfigMap запустите валидацию и при необходимости примените манифест в кластер. Подробнее: [custom-pricing-strategy.md](custom-pricing-strategy.md).
+Токен можно не задавать, если установлен CLI `yc` — скрипт вызовет `yc iam create-token`. После обновления ConfigMap запустите валидацию и при необходимости примените манифест в кластер.
 
 ## Стоимость по командам (team cost)
 

@@ -12,8 +12,6 @@
   # Обновить custom-pricing-configmap.yaml:
   python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 
-  # Сохранить сырой ответ API в файл для отладки:
-  python3 scripts/fetch_yandex_sku_prices.py --save-response skus.json
 """
 from __future__ import annotations
 
@@ -48,7 +46,7 @@ def _to_snake(s: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
 
 
-def fetch_skus(token: str, save_path: Path | None = None) -> list[dict]:
+def fetch_skus(token: str) -> list[dict]:
     """Загрузить список SKU из Billing API."""
     req = Request(
         BILLING_SKUS_URL,
@@ -66,10 +64,6 @@ def fetch_skus(token: str, save_path: Path | None = None) -> list[dict]:
         skus = data if isinstance(data, list) else []
     if not isinstance(skus, list):
         skus = [skus]
-
-    if save_path:
-        save_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"Ответ сохранён в {save_path}", file=sys.stderr)
 
     return skus
 
@@ -119,16 +113,28 @@ def _name_and_desc(sku: dict) -> str:
     return (name + " " + desc).lower()
 
 
+def list_skus(skus: list[dict]) -> None:
+    """Вывести список SKU из каталога (id, name, description, pricingUnit, price RUB) для сравнения с полями ConfigMap."""
+    for sku in skus:
+        price = _current_unit_price_rub(sku)
+        pid = _get(sku, "id") or ""
+        name = _get(sku, "name") or ""
+        desc = (_get(sku, "description") or "")[:80]
+        unit = _pricing_unit(sku)
+        svc = _get(sku, "service_id", "serviceId") or ""
+        pstr = f"{price} RUB" if price is not None else "—"
+        print(f"  {pid}\t{unit}\t{pstr}\t{name}\t{desc}")
+
+
 def match_skus(skus: list[dict]) -> dict[str, float]:
     """
-    Сопоставить SKU с полями ConfigMap: CPU, RAM, storage, zoneNetworkEgress (и т.д.).
-    Возвращает словарь ключ -> значение в рублях (месячные для CPU/RAM/storage, за ГБ для egress).
+    Сопоставить SKU с полями ConfigMap: CPU, RAM, storage.
+    Возвращает словарь ключ -> значение в рублях (месячные ставки).
     """
     result: dict[str, float] = {}
     cpu_candidates: list[tuple[float, str]] = []
     ram_candidates: list[tuple[float, str]] = []
     storage_candidates: list[tuple[float, str]] = []
-    egress_candidates: list[tuple[float, str]] = []
 
     for sku in skus:
         unit = _pricing_unit(sku)
@@ -157,11 +163,6 @@ def match_skus(skus: list[dict]) -> dict[str, float]:
         if "gbyte" in unit and "hour" in unit and ("disk" in text or "диск" in text or "storage" in text or "ssd" in text or "hdd" in text or "nvme" in text):
             storage_candidates.append((price, _get(sku, "name") or ""))
 
-        # Egress: за ГБ (без часа)
-        if ("gbyte" in unit and "hour" not in unit) or "traffic" in text or "трафик" in text or "egress" in text or "исходящ" in text:
-            egress_candidates.append((price, _get(sku, "name") or ""))
-
-    # Берём минимальную положительную цену (SKU с ценой 0 — бесплатные/служебные)
     def _min_positive(candidates: list[tuple[float, str]]) -> float | None:
         prices = [c[0] for c in candidates if c[0] > 0]
         return min(prices) if prices else None
@@ -178,26 +179,20 @@ def match_skus(skus: list[dict]) -> dict[str, float]:
         price = _min_positive(storage_candidates)
         if price is not None:
             result["storage"] = round(price * HOURS_PER_MONTH, 3)
-    if egress_candidates:
-        price = min(c[0] for c in egress_candidates)
-        result["zoneNetworkEgress"] = result["regionNetworkEgress"] = result["internetNetworkEgress"] = round(price, 4)
 
     return result
 
 
 def update_configmap(configmap_path: Path, prices: dict[str, float]) -> None:
-    """Обновить в YAML только значения CPU, RAM, storage и egress, сохраняя комментарии и структуру."""
+    """Обновить в YAML значения CPU, RAM, storage, сохраняя комментарии и структуру."""
     text = configmap_path.read_text(encoding="utf-8")
-    for key in ("CPU", "RAM", "storage", "zoneNetworkEgress", "regionNetworkEgress", "internetNetworkEgress"):
+    for key in ("CPU", "RAM", "storage"):
         if key not in prices:
             continue
         val = prices[key]
-        if key in ("CPU", "RAM", "storage"):
-            hourly = val / HOURS_PER_MONTH
-            unit = "vCPU-час" if key == "CPU" else "ГБ-час"
-            comment = f"  # {hourly:.4f} ₽/{unit} * 730"
-        else:
-            comment = ""
+        hourly = val / HOURS_PER_MONTH
+        unit = "vCPU-час" if key == "CPU" else "ГБ-час"
+        comment = f"  # {hourly:.4f} ₽/{unit} * 730"
         pattern = re.compile(
             r'^(\s*' + re.escape(key) + r':\s*)"[^"]*"(.*)$',
             re.MULTILINE,
@@ -243,10 +238,15 @@ def main() -> int:
         action="store_true",
         help="Только вывести подобранные цены, не менять файлы",
     )
+    parser.add_argument(
+        "--list-skus",
+        action="store_true",
+        help="Вывести список всех SKU из каталога (id, unit, price, name) для сравнения с полями ConfigMap",
+    )
     args = parser.parse_args()
 
     token = args.token
-    if not token and not args.save_response:
+    if not token:
         import subprocess
         try:
             token = subprocess.run(
@@ -262,22 +262,24 @@ def main() -> int:
         print("Задайте IAM_TOKEN или --token, либо установите yc CLI и выполните: yc iam create-token", file=sys.stderr)
         return 2
 
-    skus = fetch_skus(token, save_path=args.save_response)
+    skus = fetch_skus(token)
     if not skus:
         print("SKU не получены или список пуст. Проверьте токен и права доступа к Billing API.", file=sys.stderr)
         return 1
 
+    if args.list_skus:
+        print("SKU из Billing API (Sku.List): id\tpricingUnit\tprice\tname\tdescription")
+        list_skus(skus)
+        return 0
+
     prices = match_skus(skus)
     if not prices:
-        print("Не удалось сопоставить ни один SKU с CPU/RAM/storage/egress. Сохраните ответ --save-response и проверьте структуру.", file=sys.stderr)
+        print("Не удалось сопоставить ни один SKU с CPU/RAM/storage. Проверьте токен и структуру ответа API.", file=sys.stderr)
         return 1
 
     print("Подобранные тарифы (рубли):")
     for k, v in prices.items():
-        if k in ("CPU", "RAM", "storage"):
-            print(f"  {k}: {v}  (мес, почасовая {v / HOURS_PER_MONTH:.4f})")
-        else:
-            print(f"  {k}: {v}  (за 1 ГБ)")
+        print(f"  {k}: {v}  (мес, почасовая {v / HOURS_PER_MONTH:.4f})")
 
     if args.update and not args.dry_run:
         update_configmap(args.update, prices)
