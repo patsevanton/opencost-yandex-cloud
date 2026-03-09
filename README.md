@@ -87,11 +87,13 @@ helm upgrade --install --wait \
 
 ### Откуда брать значения
 
-| Источник | Описание |
-|----------|----------|
-| **Документация Yandex Cloud** | [Тарификация Compute Cloud](https://cloud.yandex.ru/docs/compute/pricing) — почасовые цены vCPU, RAM, диск, трафик. Месячная ставка = почасовая × 730. Регион и тип диска — по вашему кластеру. |
-| **Billing API (SkuService)** | Методы [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращают каталог SKU и list price. Нужен IAM-токен; маппинг SKU → vCPU/RAM/диск и пересчёт в формат ConfigMap можно автоматизировать скриптом. |
-| **Вручную** | Закрепить в комментариях ConfigMap формулу (например `# 1.2852 ₽/vCPU-час * 730`) и ссылку на страницу тарификации — при следующем обновлении расчёт повторить легко. |
+Выбран **Billing API (SkuService)** — тарифы (list price) через [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list). IAM-токен: `yc iam create-token`. Для проверки значений в `custom-pricing-configmap.yaml` запросите актуальные тарифы и сверьте почасовые vCPU/RAM/диск с комментариями в ConfigMap (месячная ставка = почасовая × 730):
+
+```bash
+export IAM_TOKEN=$(yc iam create-token)
+curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/skus" \
+  -H "Authorization: Bearer $IAM_TOKEN" -H "Content-Type: application/json"
+```
 
 ### Как проверять
 
@@ -103,7 +105,7 @@ helm upgrade --install --wait \
 
 2. **В кластере** — после `kubectl apply` при необходимости перезапустить под OpenCost; убедиться в UI или по метрикам (`node_cpu_hourly_cost`, `node_total_hourly_cost`), что стоимость нод и аллокаций не нулевая и не аномальная.
 
-3. **Сверка с биллингом** — за выбранный период сравнить сумму из Allocation API с фактическими списаниями (экспорт детализации в Object Storage или Yandex Query). Подробнее: [yandex-cloud-billing-api-charges.md](yandex-cloud-billing-api-charges.md).
+3. **Сверка с биллингом** — за выбранный период сравнить сумму из Allocation API с фактическими списаниями (экспорт детализации в Object Storage или Yandex Query). Подробнее: [см. раздел «Биллинг Yandex Cloud и интеграция с OpenCost»](#биллинг-yandex-cloud-и-интеграция-с-opencost).
 
 ### Чек-лист обновления тарифов
 
@@ -222,3 +224,53 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
 
 Подключение OpenCost через MCP (для AI-ассистентов) описано в [mcp.md](mcp.md).
+
+
+# Биллинг Yandex Cloud и интеграция с OpenCost
+
+## Cloud Costs и External Costs в OpenCost
+
+OpenCost помимо расчёта стоимости Kubernetes (Allocation API) предоставляет два дополнительных механизма:
+
+| Механизм | Появился | Что учитывает |
+|----------|----------|---------------|
+| **Cloud Costs** | 1.108.0 | Фактические расходы из billing API облачного провайдера (AWS, GCP, Azure). Показывает реальные списания, а не расчёт по list price. |
+| **External Costs** | 1.110.0 | Затраты на сторонние сервисы вне облака: мониторинг (Datadog), SaaS (MongoDB Atlas), AI/API (OpenAI) и т.п. |
+
+**Yandex Cloud** не входит в список поддерживаемых провайдеров Cloud Costs. External Costs не подходит, так как нас интересуют расходы на само облако, а не на сторонние сервисы.
+
+## Yandex Cloud Billing API: почему не поможет с детализацией
+
+Billing API v1 (gRPC/REST) содержит три сервиса:
+
+| Сервис | Что даёт |
+|--------|----------|
+| `BillingAccountService` | Список аккаунтов, баланс, привязки |
+| `SkuService` | Каталог SKU и тарифы (list price) |
+| `ServiceService` | Справочник сервисов |
+
+**Ни один из них не предоставляет фактического потребления или списаний.** Нельзя запросить «сколько потрачено за период X на сервис Y» — API отдаёт только баланс, тарифы и список сервисов. Детализация расходов доступна только через экспорт в CSV.
+
+## Доступные способы получения фактических расходов Yandex Cloud
+
+### CSV-экспорт в Object Storage
+
+Источник: [Экспортировать расширенную детализацию](https://yandex.cloud/ru/docs/billing/operations/get-folder-report).
+
+- **Разовый экспорт** — в консоли биллинга выгрузка за выбранный период в CSV.
+- **Регулярный экспорт** — в настройках биллинга задаётся бакет Object Storage, куда ежедневно выгружаются CSV (обновление раз в час). Поресурсная детализация включает `resource_id`, `sku_id`, идентификаторы каталогов, лейблы.
+
+Для программного доступа: настроить экспорт в бакет и читать CSV через S3-совместимый API.
+
+### Yandex Query
+
+Если детализация уже выгружается в бакет, можно анализировать данные через [Yandex Query](https://yandex.cloud/ru-kz/docs/billing/operations/query-integration): готовые запросы (топ ресурсов, расход по сервисам) и произвольный YQL. Результаты доступны через HTTP API.
+
+## Возможные пути интеграции с OpenCost
+
+| Путь | Тип в OpenCost | Описание |
+|------|----------------|----------|
+| Кастомный Cloud Costs провайдер | Cloud Costs (`/cloudCost`) | Go-код в ядро OpenCost, читающий CSV из Object Storage (S3-совместимый API). Аналог интеграций AWS (CUR из S3) и Azure (Cost Exports). Требует модификации ядра. |
+| OpenCost Plugin | External Costs (`/customCost/*`) | Плагин, читающий CSV из Object Storage или вызывающий Yandex Query HTTP API. Не требует модификации ядра OpenCost. Репозиторий: [opencost-plugins](https://github.com/opencost/opencost-plugins). |
+
+**Итог:** прямого API для получения списаний у Yandex Cloud нет — фактические расходы доступны только через CSV-экспорт в Object Storage. Наиболее реалистичный путь интеграции — **OpenCost Plugin**, читающий CSV-детализацию из Object Storage через S3-совместимый API.
