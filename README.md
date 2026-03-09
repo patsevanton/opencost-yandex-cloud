@@ -95,6 +95,21 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/skus" \
   -H "Authorization: Bearer $IAM_TOKEN" -H "Content-Type: application/json"
 ```
 
+#### Автоматическое обновление ConfigMap из Billing API
+
+Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через Sku.List, подбирает SKU для vCPU, RAM, диска и исходящего трафика и может обновить `custom-pricing-configmap.yaml`:
+
+```bash
+export IAM_TOKEN=$(yc iam create-token)
+# Показать подобранные цены (рубли), не менять файлы:
+python3 scripts/fetch_yandex_sku_prices.py
+
+# Обновить custom-pricing-configmap.yaml:
+python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
+```
+
+Токен можно не задавать, если установлен CLI `yc` — скрипт вызовет `yc iam create-token`. После обновления ConfigMap запустите валидацию и при необходимости примените манифест в кластер (см. [Чек-лист обновления тарифов](#чек-лист-обновления-тарифов)).
+
 ### Как проверять
 
 1. **Локально (перед применением)** — скрипт проверяет наличие обязательных ключей и что числовые значения в разумных диапазонах:
