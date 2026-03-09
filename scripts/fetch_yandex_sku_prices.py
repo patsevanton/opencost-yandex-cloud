@@ -230,12 +230,6 @@ def main() -> int:
         help="Путь к custom-pricing-configmap.yaml для обновления",
     )
     parser.add_argument(
-        "--save-response",
-        type=Path,
-        metavar="FILE",
-        help="Сохранить сырой JSON ответа API в файл",
-    )
-    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Только вывести подобранные цены, не менять файлы",
@@ -268,13 +262,6 @@ def main() -> int:
     if not skus:
         print("SKU не получены или список пуст. Проверьте токен и права доступа к Billing API.", file=sys.stderr)
         return 1
-
-    if args.save_response:
-        args.save_response.write_text(
-            json.dumps(raw_response, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        print(f"Ответ API сохранён: {args.save_response}")
 
     if args.list_skus:
         print("SKU из Billing API (Sku.List): id\tpricingUnit\tprice\tname\tdescription")
