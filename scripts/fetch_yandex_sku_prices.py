@@ -12,7 +12,7 @@
   # Список всех SKU (с пагинацией): id, serviceId, unit, price, name
   python3 scripts/fetch_yandex_sku_prices.py --list-skus
 
-  # То же и сохранить в txt:
+  # То же и сохранить в файл (например skus.txt):
   python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.txt
 
   # Обновить custom-pricing-configmap.yaml:
