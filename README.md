@@ -57,7 +57,7 @@ Grafana доступна по адресу http://grafana.apatsev.org.ru (см. 
 
 ### Billing API Яндекс Облака
 
-Тарифы для OpenCost можно получать через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). В Billing API нет однозначного ответа по тарифам на сетевой egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации).
+Тарифы для OpenCost можно получать через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). 
 
 Скрипт `scripts/fetch_yandex_sku_prices.py` может вывести список всех SKU из каталога.
 
@@ -75,7 +75,7 @@ python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.txt
 
 ### Автоматическое создание custom-pricing-configmap.yaml
 
-Скрипт сам запишет значения в `custom-pricing-configmap.yaml` для CPU, RAM и storage по тарифам Intel Ice Lake и SSD.
+Скрипт сам запишет значения в `custom-pricing-configmap.yaml` для CPU, RAM и storage по тарифам Intel Ice Lake и SSD. В Billing API нет однозначного ответа по тарифам на сетевой egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации). Поэтому скрипт записывает только цены для CPU, RAM и storage.
 
 ```bash
 # Показать подобранные цены (рубли), не менять файлы:
@@ -271,10 +271,9 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 
 Подключение OpenCost через MCP (для AI-ассистентов) описано в [mcp.md](mcp.md).
 
+## Биллинг Yandex Cloud и интеграция с OpenCost
 
-# Биллинг Yandex Cloud и интеграция с OpenCost
-
-## Cloud Costs и External Costs в OpenCost
+### Cloud Costs и External Costs в OpenCost
 
 OpenCost помимо расчёта стоимости Kubernetes (Allocation API) предоставляет два дополнительных механизма:
 
@@ -285,7 +284,7 @@ OpenCost помимо расчёта стоимости Kubernetes (Allocation A
 
 **Yandex Cloud** не входит в список поддерживаемых провайдеров Cloud Costs. External Costs не подходит, так как нас интересуют расходы на само облако, а не на сторонние сервисы.
 
-## Yandex Cloud Billing API: почему не поможет с детализацией
+### Yandex Cloud Billing API: почему не поможет с детализацией
 
 Billing API v1 (gRPC/REST) содержит три сервиса:
 
@@ -297,9 +296,9 @@ Billing API v1 (gRPC/REST) содержит три сервиса:
 
 **Ни один из них не предоставляет фактического потребления или списаний.** Нельзя запросить «сколько потрачено за период X на сервис Y» — API отдаёт только баланс, тарифы и список сервисов. Детализация расходов доступна только через экспорт в CSV.
 
-## Доступные способы получения фактических расходов Yandex Cloud
+### Доступные способы получения фактических расходов Yandex Cloud
 
-### CSV-экспорт в Object Storage
+#### CSV-экспорт в Object Storage
 
 Источник: [Экспортировать расширенную детализацию](https://yandex.cloud/ru/docs/billing/operations/get-folder-report).
 
@@ -308,11 +307,11 @@ Billing API v1 (gRPC/REST) содержит три сервиса:
 
 Для программного доступа: настроить экспорт в бакет и читать CSV через S3-совместимый API.
 
-### Yandex Query
+#### Yandex Query
 
 Если детализация уже выгружается в бакет, можно анализировать данные через [Yandex Query](https://yandex.cloud/ru-kz/docs/billing/operations/query-integration): готовые запросы (топ ресурсов, расход по сервисам) и произвольный YQL. Результаты доступны через HTTP API.
 
-## Возможные пути интеграции с OpenCost
+### Возможные пути интеграции с OpenCost
 
 | Путь | Тип в OpenCost | Описание |
 |------|----------------|----------|
