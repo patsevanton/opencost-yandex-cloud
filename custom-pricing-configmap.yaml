@@ -14,7 +14,8 @@ data:
   provider: "custom"
   currency: "RUB"
   description: "Yandex Cloud тарифы (₽)"
-  # Месячные ставки (₽/мес за единицу), OpenCost переведёт в почасовые делением на 730:
-  CPU: "96.214"  # 0.1318 ₽/vCPU-час * 730
-  RAM: "24.017"  # 0.0329 ₽/ГБ-час * 730
-  storage: "2.117"  # 0.0029 ₽/ГБ-час * 730
+  # Месячные ставки (₽/мес за единицу), OpenCost переведёт в почасовые делением на 730.
+  # Источники: skus.txt (Billing API) + сверка с детализацией биллинга (последний час).
+  CPU: "953.818"  # 1.3066 ₽/vCPU-час (Regular VM Intel Cascade Lake 100% vCPU) * 730
+  RAM: "248.492"  # 0.3404 ₽/ГБ-час (Regular VM Intel Cascade Lake RAM) * 730
+  storage: "3.285"  # 0.0045 ₽/ГБ-час (Standard disk HDD); SSD ≈ 0.0182 → 13.286

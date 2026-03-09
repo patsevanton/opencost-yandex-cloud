@@ -9,6 +9,12 @@
   # Только вывести подобранные цены (рубли):
   python3 scripts/fetch_yandex_sku_prices.py
 
+  # Список всех SKU (с пагинацией): id, serviceId, unit, price, name
+  python3 scripts/fetch_yandex_sku_prices.py --list-skus
+
+  # То же и сохранить в txt:
+  python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.txt
+
   # Обновить custom-pricing-configmap.yaml:
   python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 
@@ -21,6 +27,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
@@ -47,25 +54,39 @@ def _to_snake(s: str) -> str:
 
 
 def fetch_skus(token: str) -> tuple[dict, list[dict]]:
-    """Загрузить список SKU из Billing API. Возвращает (сырой ответ API, список skus)."""
-    req = Request(
-        BILLING_SKUS_URL,
-        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
-        method="GET",
-    )
-    try:
-        with urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read().decode())
-    except (HTTPError, URLError) as e:
-        sys.exit(f"Ошибка запроса к Billing API: {e}")
+    """Загрузить список SKU из Billing API с учётом пагинации. Возвращает (последний ответ API, полный список skus)."""
+    all_skus: list[dict] = []
+    page_token: str | None = None
+    last_data: dict = {}
 
-    skus = _get(data, "skus")
-    if skus is None:
-        skus = data if isinstance(data, list) else []
-    if not isinstance(skus, list):
-        skus = [skus]
+    while True:
+        url = BILLING_SKUS_URL
+        if page_token:
+            url = f"{url}?{urlencode({'pageToken': page_token})}"
+        req = Request(
+            url,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            method="GET",
+        )
+        try:
+            with urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode())
+        except (HTTPError, URLError) as e:
+            sys.exit(f"Ошибка запроса к Billing API: {e}")
 
-    return data, skus
+        last_data = data
+        skus = _get(data, "skus")
+        if skus is None:
+            skus = data if isinstance(data, list) else []
+        if not isinstance(skus, list):
+            skus = [skus]
+        all_skus.extend(skus)
+
+        page_token = _get(data, "next_page_token", "nextPageToken")
+        if not page_token:
+            break
+
+    return last_data, all_skus
 
 
 def _current_unit_price_rub(sku: dict) -> float | None:
@@ -113,17 +134,27 @@ def _name_and_desc(sku: dict) -> str:
     return (name + " " + desc).lower()
 
 
-def list_skus(skus: list[dict]) -> None:
-    """Вывести список SKU из каталога (id, name, description, pricingUnit, price RUB) для сравнения с полями ConfigMap."""
+def list_skus_text(skus: list[dict]) -> str:
+    """Сформировать текст списка SKU (id, serviceId, pricingUnit, price, name, description) для вывода или сохранения в файл."""
+    lines = [
+        "SKU из Billing API (Sku.List), страницы объединены: id\tserviceId\tpricingUnit\tprice\tname\tdescription",
+        f"Всего SKU: {len(skus)}",
+    ]
     for sku in skus:
         price = _current_unit_price_rub(sku)
         pid = _get(sku, "id") or ""
+        svc = _get(sku, "service_id", "serviceId") or ""
         name = _get(sku, "name") or ""
         desc = (_get(sku, "description") or "")[:80]
         unit = _pricing_unit(sku)
-        svc = _get(sku, "service_id", "serviceId") or ""
         pstr = f"{price} RUB" if price is not None else "—"
-        print(f"  {pid}\t{unit}\t{pstr}\t{name}\t{desc}")
+        lines.append(f"  {pid}\t{svc}\t{unit}\t{pstr}\t{name}\t{desc}")
+    return "\n".join(lines)
+
+
+def list_skus(skus: list[dict]) -> None:
+    """Вывести список SKU в stdout."""
+    print(list_skus_text(skus))
 
 
 def match_skus(skus: list[dict]) -> dict[str, float]:
@@ -237,7 +268,14 @@ def main() -> int:
     parser.add_argument(
         "--list-skus",
         action="store_true",
-        help="Вывести список всех SKU из каталога (id, unit, price, name) для сравнения с полями ConfigMap",
+        help="Вывести список всех SKU из каталога (id, serviceId, unit, price, name) для сравнения с полями ConfigMap",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        metavar="FILE",
+        help="Сохранить вывод --list-skus в txt-файл",
     )
     args = parser.parse_args()
 
@@ -264,8 +302,11 @@ def main() -> int:
         return 1
 
     if args.list_skus:
-        print("SKU из Billing API (Sku.List): id\tpricingUnit\tprice\tname\tdescription")
-        list_skus(skus)
+        text = list_skus_text(skus)
+        print(text)
+        if args.output is not None:
+            args.output.write_text(text, encoding="utf-8")
+            print(f"Сохранено в {args.output}", file=sys.stderr)
         return 0
 
     prices = match_skus(skus)
