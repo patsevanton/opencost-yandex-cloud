@@ -1,7 +1,5 @@
 # opencost-yandex-cloud
-
-Тестирование OpenCost в Yandex Cloud.
-
+OpenCost в Yandex Cloud — расчёт стоимости Kubernetes по ценам Yandex Cloud.
 ## Цели проекта
 
 - **Видимость расходов** — получать расчёт стоимости Kubernetes-кластера (ноды, поды, CPU/RAM/диск) в рублях по ценам Yandex Cloud.
