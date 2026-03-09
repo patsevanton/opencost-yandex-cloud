@@ -49,7 +49,7 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
 
   scale_policy {
     fixed_scale {
-      size = 3
+      size = 1
     }
   }
 
@@ -72,13 +72,13 @@ resource "yandex_kubernetes_node_group" "k8s-node-group" {
     }
 
     resources {
-      memory = 20
-      cores  = 4
+      memory = 8
+      cores  = 2
     }
 
     boot_disk {
       type = "network-ssd"
-      size = 128
+      size = 33
     }
   }
 }
