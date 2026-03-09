@@ -98,10 +98,10 @@ curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/skus" \
 ### Как проверять
 
 1. **Локально (перед применением)** — скрипт проверяет наличие обязательных ключей и что числовые значения в разумных диапазонах:
-   ```bash
-   python3 scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml
-   ```
-   Проверка ConfigMap из кластера: `kubectl get configmap custom-pricing-model -n opencost -o yaml | python3 scripts/validate_custom_pricing.py --stdin`
+```bash
+python3 scripts/validate_custom_pricing.py --file custom-pricing-configmap.yaml
+```
+Проверка ConfigMap из кластера: `kubectl get configmap custom-pricing-model -n opencost -o yaml | python3 scripts/validate_custom_pricing.py --stdin`
 
 2. **В кластере** — после `kubectl apply` при необходимости перезапустить под OpenCost; убедиться в UI или по метрикам (`node_cpu_hourly_cost`, `node_total_hourly_cost`), что стоимость нод и аллокаций не нулевая и не аномальная.
 
