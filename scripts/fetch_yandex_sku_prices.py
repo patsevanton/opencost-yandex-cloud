@@ -46,8 +46,8 @@ def _to_snake(s: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", s).lower()
 
 
-def fetch_skus(token: str) -> list[dict]:
-    """Загрузить список SKU из Billing API."""
+def fetch_skus(token: str) -> tuple[dict, list[dict]]:
+    """Загрузить список SKU из Billing API. Возвращает (сырой ответ API, список skus)."""
     req = Request(
         BILLING_SKUS_URL,
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
@@ -65,7 +65,7 @@ def fetch_skus(token: str) -> list[dict]:
     if not isinstance(skus, list):
         skus = [skus]
 
-    return skus
+    return data, skus
 
 
 def _current_unit_price_rub(sku: dict) -> float | None:
@@ -193,11 +193,13 @@ def update_configmap(configmap_path: Path, prices: dict[str, float]) -> None:
         hourly = val / HOURS_PER_MONTH
         unit = "vCPU-час" if key == "CPU" else "ГБ-час"
         comment = f"  # {hourly:.4f} ₽/{unit} * 730"
+        # Заменяем всю строку (значение + любые старые комментарии), чтобы не дублировать комментарий при повторных запусках.
+        # В подстановку не добавляем \n — после совпадения остаётся оригинальный перевод строки.
         pattern = re.compile(
             r'^(\s*' + re.escape(key) + r':\s*)"[^"]*"(.*)$',
             re.MULTILINE,
         )
-        replacement = rf'\1"{val}"' + comment + r"\2"
+        replacement = rf'\1"{val}"' + comment
         new_text = pattern.sub(replacement, text, count=1)
         if new_text != text:
             text = new_text
@@ -206,7 +208,7 @@ def update_configmap(configmap_path: Path, prices: dict[str, float]) -> None:
                 r'^(\s*' + re.escape(key) + r':\s*)[^\s#]+(.*)$',
                 re.MULTILINE,
             )
-            text = pattern2.sub(rf'\1"{val}"' + comment + r"\2", text, count=1)
+            text = pattern2.sub(rf'\1"{val}"' + comment, text, count=1)
     configmap_path.write_text(text, encoding="utf-8")
 
 
@@ -262,10 +264,17 @@ def main() -> int:
         print("Задайте IAM_TOKEN или --token, либо установите yc CLI и выполните: yc iam create-token", file=sys.stderr)
         return 2
 
-    skus = fetch_skus(token)
+    raw_response, skus = fetch_skus(token)
     if not skus:
         print("SKU не получены или список пуст. Проверьте токен и права доступа к Billing API.", file=sys.stderr)
         return 1
+
+    if args.save_response:
+        args.save_response.write_text(
+            json.dumps(raw_response, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        print(f"Ответ API сохранён: {args.save_response}")
 
     if args.list_skus:
         print("SKU из Billing API (Sku.List): id\tpricingUnit\tprice\tname\tdescription")
