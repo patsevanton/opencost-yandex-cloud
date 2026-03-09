@@ -157,15 +157,53 @@ def list_skus(skus: list[dict]) -> None:
     print(list_skus_text(skus))
 
 
-def match_skus(skus: list[dict]) -> dict[str, float]:
+def _is_compute_cloud_regular_vm(text: str) -> bool:
+    """SKU относится к Compute Cloud, обычные VM (не Preemptible, не Data Processing, не Managed Service)."""
+    t = text
+    if "preemptible" in t or "data processing" in t or "data proc" in t or "managed service" in t:
+        return False
+    return "regular vm" in t or ("compute" in t and "vm" in t) or "вычислительные ресурсы обычной" in t
+
+
+def _is_vm_disk(text: str) -> bool:
+    """Диск, привязанный к VM (Compute Cloud), не Object Storage / ice / video / Cloud Desktop."""
+    t = text
+    if "object storage" in t or "ice storage" in t or "cloud video" in t or "cloud desktop" in t:
+        return False
+    if "data placement" in t and "ice" in t:
+        return False
+    return ("disk" in t or "диск" in t or "drive" in t) and ("standard" in t or "fast" in t or "hdd" in t or "ssd" in t or "network drive" in t)
+
+
+def _is_plain_ice_lake_cpu(text: str) -> bool:
+    """Intel Ice Lake без GPU (T4/T4i/Nvidia) и без Compute Optimized."""
+    t = text
+    if "t4i" in t or "t4 " in t or "nvidia" in t or "compute optimized" in t:
+        return False
+    return "ice lake" in t and "100%" in t
+
+
+def _is_plain_ram(text: str) -> bool:
+    """RAM: Intel Ice Lake, без GPU PLATFORM V4, без Compute Optimized, без T4/Nvidia/V100."""
+    t = text
+    if "gpu platform" in t or "platform v4" in t or "compute optimized" in t or "t4i" in t or "nvidia" in t or "v100" in t:
+        return False
+    return "ram" in t and "ice lake" in t
+
+
+def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
     """
     Сопоставить SKU с полями ConfigMap: CPU, RAM, storage.
-    Возвращает словарь ключ -> значение в рублях (месячные ставки).
+    Приоритет: Compute Cloud, Regular VM, 100% vCPU; диски ВМ (не Object Storage).
+    Возвращает (словарь ключ -> месячная ставка в рублях, словарь ключ -> название SKU).
     """
     result: dict[str, float] = {}
     cpu_candidates: list[tuple[float, str]] = []
+    cpu_preferred: list[tuple[float, str]] = []  # Regular VM, просто Intel Ice Lake (без GPU, без Compute Optimized)
     ram_candidates: list[tuple[float, str]] = []
+    ram_preferred: list[tuple[float, str]] = []  # Regular VM, Intel Ice Lake RAM (не GPU PLATFORM V4)
     storage_candidates: list[tuple[float, str]] = []
+    storage_preferred: list[tuple[float, str]] = []  # SSD, не Cloud Desktop
 
     for sku in skus:
         unit = _pricing_unit(sku)
@@ -173,49 +211,76 @@ def match_skus(skus: list[dict]) -> dict[str, float]:
         price = _current_unit_price_rub(sku)
         if price is None:
             continue
+        name = _get(sku, "name") or sku.get("id", "")
 
-        # vCPU: core*hour, core-hour, упоминание vcpu/cpu
+        # vCPU: приоритет — Regular VM, просто Intel Ice Lake 100% vCPU (без T4/Nvidia, без CVoS)
         if "core" in unit and "hour" in unit:
-            cpu_candidates.append((price, _get(sku, "name") or sku.get("id", "")))
-        elif "cpu" in text or "vpu" in text or "core" in text:
-            if "hour" in unit or "час" in text:
-                cpu_candidates.append((price, _get(sku, "name") or ""))
+            cpu_candidates.append((price, name))
+            if _is_compute_cloud_regular_vm(text) and _is_plain_ice_lake_cpu(text) and "cvos" not in text:
+                cpu_preferred.append((price, name))
 
-        # RAM: gbyte*hour для памяти (не диска)
+        # RAM: приоритет — Regular VM, просто RAM (без Compute Optimized, без CVoS)
         if "gbyte" in unit and "hour" in unit:
-            if "ram" in text or "память" in text or "memory" in text or "gb" in text and "disk" not in text and "диск" not in text:
-                ram_candidates.append((price, _get(sku, "name") or ""))
-            elif "disk" in text or "диск" in text or "storage" in text or "nvme" in text or "ssd" in text or "hdd" in text:
-                storage_candidates.append((price, _get(sku, "name") or ""))
-            elif not storage_candidates and not ram_candidates:
-                ram_candidates.append((price, _get(sku, "name") or ""))
+            if "disk" in text or "диск" in text or "storage" in text and "ram" not in text:
+                if _is_vm_disk(text):
+                    storage_candidates.append((price, name))
+                    if "ssd" in text and ("fast" in text or "network drive" in text):
+                        storage_preferred.append((price, name))
+            elif "ram" in text or "память" in text or "memory" in text or ("gb" in text and "disk" not in text and "диск" not in text):
+                ram_candidates.append((price, name))
+                if _is_compute_cloud_regular_vm(text) and "cvos" not in text and _is_plain_ram(text):
+                    ram_preferred.append((price, name))
 
-        # Диск: gbyte*hour для диска
-        if "gbyte" in unit and "hour" in unit and ("disk" in text or "диск" in text or "storage" in text or "ssd" in text or "hdd" in text or "nvme" in text):
-            storage_candidates.append((price, _get(sku, "name") or ""))
+        # Диск ВМ: приоритет SSD, не Cloud Desktop (_is_vm_disk уже исключает cloud desktop)
+        if "gbyte" in unit and "hour" in unit and _is_vm_disk(text):
+            storage_candidates.append((price, name))
+            if "ssd" in text and ("fast" in text or "network drive" in text):
+                storage_preferred.append((price, name))
 
-    def _min_positive(candidates: list[tuple[float, str]]) -> float | None:
-        prices = [c[0] for c in candidates if c[0] > 0]
-        return min(prices) if prices else None
+    def _min_positive_candidate(candidates: list[tuple[float, str]]) -> tuple[float, str] | None:
+        positive = [(p, n) for p, n in candidates if p > 0]
+        if not positive:
+            return None
+        return min(positive, key=lambda x: x[0])
 
+    def _choose_with_name(
+        preferred: list[tuple[float, str]], fallback: list[tuple[float, str]]
+    ) -> tuple[float, str] | None:
+        c = _min_positive_candidate(preferred)
+        if c is not None:
+            return c
+        return _min_positive_candidate(fallback)
+
+    names: dict[str, str] = {}
     if cpu_candidates:
-        price = _min_positive(cpu_candidates)
-        if price is not None:
+        chosen = _choose_with_name(cpu_preferred, cpu_candidates)
+        if chosen is not None:
+            price, name = chosen
             result["CPU"] = round(price * HOURS_PER_MONTH, 3)
+            names["CPU"] = name
     if ram_candidates:
-        price = _min_positive(ram_candidates)
-        if price is not None:
+        chosen = _choose_with_name(ram_preferred, ram_candidates)
+        if chosen is not None:
+            price, name = chosen
             result["RAM"] = round(price * HOURS_PER_MONTH, 3)
+            names["RAM"] = name
     if storage_candidates:
-        price = _min_positive(storage_candidates)
-        if price is not None:
+        chosen = _choose_with_name(storage_preferred, storage_candidates)
+        if chosen is not None:
+            price, name = chosen
             result["storage"] = round(price * HOURS_PER_MONTH, 3)
+            names["storage"] = name
 
-    return result
+    return result, names
 
 
-def update_configmap(configmap_path: Path, prices: dict[str, float]) -> None:
+def update_configmap(
+    configmap_path: Path,
+    prices: dict[str, float],
+    names: dict[str, str] | None = None,
+) -> None:
     """Обновить в YAML значения CPU, RAM, storage, сохраняя комментарии и структуру."""
+    names = names or {}
     text = configmap_path.read_text(encoding="utf-8")
     for key in ("CPU", "RAM", "storage"):
         if key not in prices:
@@ -223,7 +288,10 @@ def update_configmap(configmap_path: Path, prices: dict[str, float]) -> None:
         val = prices[key]
         hourly = val / HOURS_PER_MONTH
         unit = "vCPU-час" if key == "CPU" else "ГБ-час"
-        comment = f"  # {hourly:.4f} ₽/{unit} * 730"
+        name_part = f" ({names.get(key, '').strip()})" if names.get(key) else ""
+        comment = f"  # {hourly:.4f} ₽/{unit}{name_part} * 730"
+        if key == "storage" and ("hdd" in (names.get(key) or "").lower() or "standard" in (names.get(key) or "").lower()):
+            comment = f"  # {hourly:.4f} ₽/{unit}{name_part}; SSD ≈ 0.0182 → 13.286 * 730"
         # Заменяем всю строку (значение + любые старые комментарии), чтобы не дублировать комментарий при повторных запусках.
         # В подстановку не добавляем \n — после совпадения остаётся оригинальный перевод строки.
         pattern = re.compile(
@@ -309,17 +377,18 @@ def main() -> int:
             print(f"Сохранено в {args.output}", file=sys.stderr)
         return 0
 
-    prices = match_skus(skus)
+    prices, names = match_skus(skus)
     if not prices:
         print("Не удалось сопоставить ни один SKU с CPU/RAM/storage. Проверьте токен и структуру ответа API.", file=sys.stderr)
         return 1
 
     print("Подобранные тарифы (рубли):")
     for k, v in prices.items():
-        print(f"  {k}: {v}  (мес, почасовая {v / HOURS_PER_MONTH:.4f})")
+        name_info = f" — {names.get(k, '')}" if names.get(k) else ""
+        print(f"  {k}: {v}  (мес, почасовая {v / HOURS_PER_MONTH:.4f}){name_info}")
 
     if args.update and not args.dry_run:
-        update_configmap(args.update, prices)
+        update_configmap(args.update, prices, names)
         print(f"Обновлён файл: {args.update}")
     elif args.update and args.dry_run:
         print("Dry-run: файл не изменён.")

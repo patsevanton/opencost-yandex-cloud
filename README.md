@@ -52,6 +52,93 @@ kubectl get secret vmks-grafana -n vmks -o jsonpath="{.data.admin-password}" | b
 
 Grafana доступна по адресу http://grafana.apatsev.org.ru (см. `vmks-values.yaml`).
 
+## Настройка цен для OpenCost
+
+### Billing API яндекс облака
+
+Тарифы для OpenCost можно получать через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). В Billing API нет однозначного ответа по тарифам на сетевой egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации).
+
+Скрипт `scripts/fetch_yandex_sku_prices.py` может вывести список всех SKU из каталога.
+
+```bash
+export IAM_TOKEN=$(yc iam create-token)
+
+# Вывести список всех SKU из каталога:
+python3 scripts/fetch_yandex_sku_prices.py --list-skus
+
+# Сохранение  списка всех SKU из каталога в файл:
+python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.txt
+```
+
+Формат строки в файле `skus.txt`: `id`, `serviceId`, `pricingUnit`, `price`, `name`, `description`.
+
+### Автоматическое создание custom-pricing-configmap.yaml
+
+Скрипт сам запишет значения в `custom-pricing-configmap.yaml` для CPU, RAM и storage используя Intel Ice Lake и SSD.
+
+```bash
+# Показать подобранные цены (рубли), не менять файлы:
+python3 scripts/fetch_yandex_sku_prices.py
+
+# Обновить custom-pricing-configmap.yaml:
+python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
+```
+
+### Как заполнить custom-pricing-configmap.yaml по детализации биллинга и skus.txt
+
+В разделе **Billing → Детализация** (Consumption and Payment) в таблице есть колонки: **Сервис**, **Продукт**, **Ед. потребления**, **Стоимость потребления**. Чтобы подставить корректные цены в ConfigMap, нужно взять **цену за единицу** (за core×час, ГБ×час и т.д.), а не итог «К оплате». Эти единичные тарифы есть в каталоге SKU.
+
+**Шаг 1 — какие поля ConfigMap заполнять**
+
+В `custom-pricing-configmap.yaml` в блоке `data:` задаются:
+
+| Ключ ConfigMap | Описание | Единица в биллинге | Пример из детализации |
+|----------------|----------|--------------------|------------------------|
+| `CPU` | Цена за vCPU (месячная ставка) | core×час (core*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU |
+| `RAM` | Цена за ГБ RAM (месячная ставка) | ГБ×час (gbyte*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM |
+| `storage` | Цена за ГБ диска (месячная ставка) | ГБ×час (gbyte*hour) | Быстрый диск (SSD) |
+
+Остальные поля (`provider`, `currency`, `description`) задаются один раз и не зависят от детализации.
+
+**Шаг 2 — найти цену за единицу в skus.txt**
+
+В файле `skus.txt` Нужно найти строку, где **name/description** совпадают с **Продуктом** из детализации, а **pricingUnit** — с **Ед. потребления** (в skus.txt единицы вроде `core_hour`, `gbyte_hour`).
+
+Примеры соответствия (по скриншоту детализации и типичным SKU):
+
+- **CPU** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU», ед. потребления `core*hour`. В skus.txt ищем, например: `Regular VM computing resources, Intel Ice Lake, 100% vCPU` и `core_hour`. Цена за 1 core×час (руб.) × 730 = значение для `CPU`.
+- **RAM** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM», ед. `gbyte*hour`. В skus.txt: `Regular VM computing resources, Intel Ice Lake, RAM` и `gbyte_hour`. Цена за 1 ГБ×час × 730 = значение для `RAM`.
+- **storage (SSD)** — продукт «Быстрый диск (SSD)», ед. `gbyte*hour`. В skus.txt ищем `Fast network drive (SSD)` или аналог с `gbyte_hour`; формула: цена за 1 ГБ×час × 730 = значение для `storage`.
+
+**Шаг 3 — формула для значений**
+
+OpenCost интерпретирует значения в ConfigMap как **месячные** ставки и сам делит на 730. Поэтому:
+
+```
+значение в ConfigMap = цена_за_единицу_из_skus_руб × 730
+```
+
+Пример: в skus.txt для Regular VM Intel Ice Lake 100% vCPU указано `1.3066 RUB` за `core_hour`. Тогда `CPU = "953.818"` (1.3066 × 730). Аналогично для RAM (например 0.3404 ₽/ГБ×час → 248.492) и storage (0.0182 ₽/ГБ×час для SSD → 13.286).
+
+**Проверка:** в детализации «Стоимость потребления» за период = (объём потребления в единицах) × (цена за единицу). Цена за единицу можно проверить: стоимость потребления / объём (например, 16.94 ₽ / 12.96 core×час ≈ 1.31 ₽/core×час).
+
+**Полезные строки в skus.txt (для ручной подстановки):**
+
+- CPU: строка с `core_hour` и `Regular VM computing resources, Intel Ice Lake, 100% vCPU` (например id `dn218a07u143r9v1r5ms`, цена 1.3066 RUB).
+- RAM: строка с `gbyte_hour` и `Regular VM computing resources, Intel Ice Lake, RAM` (например id `dn2fhtcoocq50j1uj4tg`, цена 0.3404 RUB).
+- SSD: строка с `gbyte_hour` и `Fast network drive (SSD)` (id `dn27ajm6m8mnfcshbi61`, цена 0.0182 RUB).
+
+**Как обновить custom-pricing-configmap.yaml**
+
+- **Вручную:** откройте `custom-pricing-configmap.yaml`, в блоке `data:` замените значения ключей `CPU`, `RAM`, `storage` по формуле **цена_из_skus × 730** (округлить до 3 знаков после запятой). Пример для цен из таблицы выше:
+  - `CPU: "953.818"`   (1.3066 × 730)
+  - `RAM: "248.492"`   (0.3404 × 730)
+  - `storage: "13.286"` для SSD (0.0182 × 730)
+
+После правок примените ConfigMap в кластер: `kubectl apply -f custom-pricing-configmap.yaml`.
+
+Остальные позиции с детализации (публичный IP, Network Load Balancer, Cloud DNS, Managed Service for Kubernetes — мастер и т.д.) в стандартном ConfigMap OpenCost не задаются: модель учитывает в основном CPU, RAM и storage нод/подов. При необходимости их можно учитывать отдельно или в кастомной модели.
+
 ## Установка OpenCost
 
 1. Создайте namespace и примените ConfigMap с кастомными ценами **до** установки OpenCost. В [issue #240](https://github.com/opencost/opencost-helm-chart/issues/240) описано, что данные в ConfigMap должны быть в виде плоских ключей в `data:`, иначе OpenCost их не прочитает:
@@ -75,27 +162,6 @@ helm upgrade --install --wait \
 
 **Примечание (валюта в UI):** по умолчанию веб-интерфейс показывает USD. Переключить на RUB можно в самом UI, но при новом заходе снова будет USD — выбор не сохраняется. Валюта в UI **не** берётся из ConfigMap (ConfigMap задаёт только расчёты бэкенда); в текущих версиях OpenCost задать RUB по умолчанию через конфиг или Ingress нельзя. Чтобы сразу открывать в рублях, используйте ссылку с параметром: `http://opencost.apatsev.org.ru?currency=RUB`.
 
-## Кастомные цены: получение и проверка данных
-
-Тарифы для OpenCost задаются в ConfigMap `custom-pricing-model` (файл `custom-pricing-configmap.yaml`). Для полей CPU, RAM и storage указываются **месячные** ставки (₽/мес за единицу); OpenCost переводит их в почасовые делением на 730.
-
-### Автоматическое обновление ConfigMap из Billing API
-
-Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). Скрипт подбирает нужные SKU и может обновить в ConfigMap поля **CPU, RAM, storage**. В Billing API нет однозначного ответа по тарифам на сетевой egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации).
-
-```bash
-export IAM_TOKEN=$(yc iam create-token)
-# Показать подобранные цены (рубли), не менять файлы:
-python3 scripts/fetch_yandex_sku_prices.py
-
-# Вывести список всех SKU из каталога (для сверки с полями ConfigMap):
-python3 scripts/fetch_yandex_sku_prices.py --list-skus
-
-# Обновить custom-pricing-configmap.yaml:
-python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
-```
-
-Токен можно не задавать, если установлен CLI `yc` — скрипт вызовет `yc iam create-token`. После обновления ConfigMap запустите валидацию и при необходимости примените манифест в кластер.
 
 ## Стоимость по командам (team cost)
 
