@@ -81,21 +81,7 @@ helm upgrade --install --wait \
 
 Тарифы для OpenCost задаются в ConfigMap `custom-pricing-model` (файл `custom-pricing-configmap.yaml`). Для полей CPU, RAM и storage указываются **месячные** ставки (₽/мес за единицу); OpenCost переводит их в почасовые делением на 730.
 
-### Валюта (Currency)
-
-Все цены в ConfigMap заданы в **рублях (₽)**. В `custom-pricing-configmap.yaml` указано `currency: "RUB"` — бэкенд OpenCost использует это для расчётов и метрик.
-
-### Откуда брать значения
-
-Выбран **Billing API (SkuService)** — тарифы (list price) через [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list). IAM-токен: `yc iam create-token`. Для проверки значений в `custom-pricing-configmap.yaml` запросите актуальные тарифы и сверьте почасовые vCPU/RAM/диск с комментариями в ConfigMap (месячная ставка = почасовая × 730):
-
-```bash
-export IAM_TOKEN=$(yc iam create-token)
-curl -s -X GET "https://billing.api.cloud.yandex.net/billing/v1/skus" \
-  -H "Authorization: Bearer $IAM_TOKEN" -H "Content-Type: application/json"
-```
-
-#### Автоматическое обновление ConfigMap из Billing API
+### Автоматическое обновление ConfigMap из Billing API
 
 Скрипт `scripts/fetch_yandex_sku_prices.py` запрашивает тарифы через Sku.List, подбирает SKU для vCPU, RAM, диска и исходящего трафика и может обновить `custom-pricing-configmap.yaml`:
 
