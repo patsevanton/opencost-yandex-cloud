@@ -91,9 +91,7 @@ python3 scripts/fetch_yandex_sku_prices.py
 python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 ```
 
-### Как заполнить custom-pricing-configmap.yaml по детализации биллинга и skus.txt
-
-В разделе **Billing → Детализация** (Consumption and Payment) в таблице есть колонки: **Сервис**, **Продукт**, **Ед. потребления**, **Стоимость потребления**. Чтобы подставить корректные цены в ConfigMap, нужно взять **цену за единицу** (за core×час, ГБ×час и т.д.), а не итог «К оплате». Эти единичные тарифы есть в каталоге SKU.
+### Как заполнить custom-pricing-configmap.yaml вручную по данным файла skus.txt
 
 **Шаг 1 — какие поля ConfigMap заполнять**
 
@@ -105,7 +103,7 @@ python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yam
 | `RAM` | Цена за ГБ RAM (месячная ставка) | ГБ×час (gbyte*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM |
 | `storage` | Цена за ГБ диска (месячная ставка) | ГБ×час (gbyte*hour) | Стандартный диск (HDD) |
 
-Остальные поля (`provider`, `currency`, `description`) задаются один раз и не зависят от детализации.
+Остальные поля (`provider`, `description`) задаются один раз и не зависят от детализации.
 
 **Шаг 2 — найти цену за единицу в skus.txt**
 
