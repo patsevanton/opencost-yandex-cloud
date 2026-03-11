@@ -74,7 +74,7 @@ python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.txt
 
 ### Автоматическое создание custom-pricing-configmap.yaml
 
-Скрипт сам запишет значения в `custom-pricing-configmap.yaml` для CPU, RAM и storage по тарифам Intel Ice Lake и HDD. В `custom-pricing-configmap.yaml` я не записывал egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации), так как нет способа узнать стоимость трафика отдельных приложений — в отличие от CPU, RAM и storage. Поэтому скрипт записывает только цены для CPU, RAM и storage.
+Скрипт сам запишет значения в `custom-pricing-configmap.yaml` для CPU, RAM и storage по тарифам Intel Ice Lake и HDD. В скрипте при сохранении в файл `custom-pricing-configmap.yaml` я не сохранял egress (zone/region/internet) и Load Balancer (LBIngressDataCost, правила маршрутизации), так как нет способа узнать стоимость трафика отдельных приложений — в отличие от CPU, RAM и storage. Поэтому скрипт записывает только цены для CPU, RAM и storage.
 
 ```bash
 # Показать подобранные цены (рубли), не менять файлы:
