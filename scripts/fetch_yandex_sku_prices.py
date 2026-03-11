@@ -12,8 +12,8 @@
   # Список всех SKU (с пагинацией): id, serviceId, unit, price, name
   python3 scripts/fetch_yandex_sku_prices.py --list-skus
 
-  # То же и сохранить в файл (например skus.txt):
-  python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.txt
+  # То же и сохранить в markdown-файл с таблицей (например skus.md):
+  python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.md
 
   # Обновить custom-pricing-configmap.yaml:
   python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
@@ -134,10 +134,15 @@ def _name_and_desc(sku: dict) -> str:
     return (name + " " + desc).lower()
 
 
+def _md_escape(s: str) -> str:
+    """Экранировать символы, ломающие markdown-таблицу (| и переносы)."""
+    return (s or "").replace("|", "\\|").replace("\n", " ").replace("\r", "").strip()
+
+
 def list_skus_text(skus: list[dict]) -> str:
-    """Сформировать текст списка SKU (id, serviceId, pricingUnit, price, name, description) для вывода или сохранения в файл."""
+    """Сформировать текст списка SKU (id, serviceId, pricingUnit, price, name) для вывода в stdout."""
     lines = [
-        "SKU из Billing API (Sku.List), страницы объединены: id\tserviceId\tpricingUnit\tprice\tname\tdescription",
+        "SKU из Billing API (Sku.List), страницы объединены: id\tserviceId\tpricingUnit\tprice\tname",
         f"Всего SKU: {len(skus)}",
     ]
     for sku in skus:
@@ -145,11 +150,27 @@ def list_skus_text(skus: list[dict]) -> str:
         pid = _get(sku, "id") or ""
         svc = _get(sku, "service_id", "serviceId") or ""
         name = _get(sku, "name") or ""
-        desc = (_get(sku, "description") or "")[:80]
         unit = _pricing_unit(sku)
         pstr = f"{price} RUB" if price is not None else "—"
-        lines.append(f"  {pid}\t{svc}\t{unit}\t{pstr}\t{name}\t{desc}")
+        lines.append(f"  {pid}\t{svc}\t{unit}\t{pstr}\t{name}")
     return "\n".join(lines)
+
+
+def list_skus_markdown(skus: list[dict]) -> str:
+    """Сформировать markdown-файл с таблицей SKU (id, serviceId, pricingUnit, price, name)."""
+    header = "| id | serviceId | pricingUnit | price | name |"
+    sep = "| --- | --- | --- | --- | --- |"
+    rows = [header, sep]
+    for sku in skus:
+        price = _current_unit_price_rub(sku)
+        pid = _get(sku, "id") or ""
+        svc = _get(sku, "service_id", "serviceId") or ""
+        name = _md_escape(_get(sku, "name") or "")
+        unit = _pricing_unit(sku)
+        pstr = f"{price} RUB" if price is not None else "—"
+        rows.append(f"| {pid} | {svc} | {unit} | {pstr} | {name} |")
+    intro = f"SKU из Billing API (Sku.List), страницы объединены. Всего SKU: {len(skus)}\n\n"
+    return intro + "\n".join(rows)
 
 
 def list_skus(skus: list[dict]) -> None:
@@ -344,7 +365,7 @@ def main() -> int:
         "-o",
         type=Path,
         metavar="FILE",
-        help="Сохранить вывод --list-skus в txt-файл",
+        help="Сохранить вывод --list-skus в markdown-файл с таблицей (рекомендуется .md)",
     )
     args = parser.parse_args()
 
@@ -371,11 +392,12 @@ def main() -> int:
         return 1
 
     if args.list_skus:
-        text = list_skus_text(skus)
-        print(text)
         if args.output is not None:
-            args.output.write_text(text, encoding="utf-8")
-            print(f"Сохранено в {args.output}", file=sys.stderr)
+            md = list_skus_markdown(skus)
+            args.output.write_text(md, encoding="utf-8")
+            print(f"Сохранено в {args.output} (markdown с таблицей)", file=sys.stderr)
+        else:
+            print(list_skus_text(skus))
         return 0
 
     prices, names = match_skus(skus)
