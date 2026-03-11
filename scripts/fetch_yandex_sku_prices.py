@@ -204,8 +204,6 @@ def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
     ram_preferred: list[tuple[float, str]] = []  # Regular VM, Intel Ice Lake RAM (не GPU PLATFORM V4)
     storage_candidates: list[tuple[float, str]] = []
     storage_preferred: list[tuple[float, str]] = []  # SSD, не Cloud Desktop
-    storage_hdd_candidates: list[tuple[float, str]] = []
-    storage_hdd_preferred: list[tuple[float, str]] = []  # HDD / standard
 
     for sku in skus:
         unit = _pricing_unit(sku)
@@ -238,11 +236,6 @@ def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
             storage_candidates.append((price, name))
             if "ssd" in text and ("fast" in text or "network drive" in text):
                 storage_preferred.append((price, name))
-            # HDD / standard network drive — отдельная ставка storage-hdd
-            if ("hdd" in text or "standard" in text) and ("network drive" in text or "drive" in text):
-                storage_hdd_candidates.append((price, name))
-                if "standard" in text and "network" in text:
-                    storage_hdd_preferred.append((price, name))
 
     def _min_positive_candidate(candidates: list[tuple[float, str]]) -> tuple[float, str] | None:
         positive = [(p, n) for p, n in candidates if p > 0]
@@ -277,12 +270,6 @@ def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
             price, name = chosen
             result["storage"] = round(price * HOURS_PER_MONTH, 3)
             names["storage"] = name
-    if storage_hdd_candidates:
-        chosen = _choose_with_name(storage_hdd_preferred, storage_hdd_candidates)
-        if chosen is not None:
-            price, name = chosen
-            result["storage-hdd"] = round(price * HOURS_PER_MONTH, 3)
-            names["storage-hdd"] = name
 
     return result, names
 
@@ -292,7 +279,7 @@ def update_configmap(
     prices: dict[str, float],
     names: dict[str, str] | None = None,
 ) -> None:
-    """Обновить в YAML значения CPU, RAM, storage; для storage сохраняем существующий комментарий (SSD+HDD)."""
+    """Обновить в YAML значения CPU, RAM, storage."""
     names = names or {}
     text = configmap_path.read_text(encoding="utf-8")
     for key in ("CPU", "RAM", "storage"):
@@ -303,7 +290,7 @@ def update_configmap(
         unit = "vCPU-час" if key == "CPU" else "ГБ-час"
         name_part = f" ({names.get(key, '').strip()})" if names.get(key) else ""
         comment = f"  # {hourly:.4f} ₽/{unit}{name_part} * 730"
-        # Для storage только подставляем значение, комментарий не трогаем (там объединённый SSD+HDD).
+        # Для storage только подставляем значение.
         pattern = re.compile(
             r'^(\s*' + re.escape(key) + r':\s*)"[^"]*"(.*)$',
             re.MULTILINE,

@@ -96,7 +96,7 @@ python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yam
 |----------------|----------|--------------------|------------------------|
 | `CPU` | Цена за vCPU (месячная ставка) | core×час (core*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU |
 | `RAM` | Цена за ГБ RAM (месячная ставка) | ГБ×час (gbyte*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM |
-| `storage` | Цена за ГБ диска (месячная ставка) | ГБ×час (gbyte*hour) | Быстрый диск (SSD) |
+| `storage` | Цена за ГБ диска (месячная ставка) | ГБ×час (gbyte*hour) | Стандартный диск (HDD) |
 
 Остальные поля (`provider`, `currency`, `description`) задаются один раз и не зависят от детализации.
 
