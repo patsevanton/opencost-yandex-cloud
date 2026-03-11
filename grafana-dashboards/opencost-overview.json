@@ -987,6 +987,301 @@
  }
  ],
  "type": "table"
+ },
+ {
+ "collapsed": false,
+ "gridPos": {
+ "h": 1,
+ "w": 24,
+ "x": 0,
+ "y": 30
+ },
+ "id": 19,
+ "title": "GPU, Spot, Cluster & LB",
+ "description": "Метрики GPU, прерываемых нод (spot), управление кластером и Load Balancer.",
+ "type": "row"
+ },
+ {
+ "datasource": {
+ "type": "datasource",
+ "uid": "-- Mixed --"
+ },
+ "fieldConfig": {
+ "defaults": {
+ "thresholds": {
+ "steps": [
+ {
+ "color": "green",
+ "value": 0
+ }
+ ]
+ },
+ "unit": "currencyRUB"
+ }
+ },
+ "gridPos": {
+ "h": 3,
+ "w": 4,
+ "x": 0,
+ "y": 31
+ },
+ "id": 20,
+ "options": {
+ "graphMode": "none",
+ "reduceOptions": {
+ "calcs": [
+ "lastNotNull"
+ ]
+ }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+ {
+ "datasource": {
+ "type": "prometheus",
+ "uid": "$datasource"
+ },
+ "expr": "sum(node_gpu_hourly_cost{job=~\"$job\"} * on(node) node_gpu_count{job=~\"$job\"})"
+ }
+ ],
+ "title": "GPU Hourly Cost",
+ "description": "Почасовая стоимость GPU по кластеру (руб.).",
+ "type": "stat"
+ },
+ {
+ "datasource": {
+ "type": "datasource",
+ "uid": "-- Mixed --"
+ },
+ "fieldConfig": {
+ "defaults": {
+ "thresholds": {
+ "steps": [
+ {
+ "color": "green",
+ "value": 0
+ }
+ ]
+ },
+ "unit": "short"
+ }
+ },
+ "gridPos": {
+ "h": 3,
+ "w": 4,
+ "x": 4,
+ "y": 31
+ },
+ "id": 21,
+ "options": {
+ "graphMode": "none",
+ "reduceOptions": {
+ "calcs": [
+ "lastNotNull"
+ ]
+ }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+ {
+ "datasource": {
+ "type": "prometheus",
+ "uid": "$datasource"
+ },
+ "expr": "sum(node_gpu_count{job=~\"$job\"})"
+ }
+ ],
+ "title": "Total GPU Count",
+ "description": "Общее количество GPU на нодах.",
+ "type": "stat"
+ },
+ {
+ "datasource": {
+ "type": "datasource",
+ "uid": "-- Mixed --"
+ },
+ "fieldConfig": {
+ "defaults": {
+ "thresholds": {
+ "steps": [
+ {
+ "color": "green",
+ "value": 0
+ }
+ ]
+ },
+ "unit": "short"
+ }
+ },
+ "gridPos": {
+ "h": 3,
+ "w": 4,
+ "x": 8,
+ "y": 31
+ },
+ "id": 22,
+ "options": {
+ "graphMode": "none",
+ "reduceOptions": {
+ "calcs": [
+ "lastNotNull"
+ ]
+ }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+ {
+ "datasource": {
+ "type": "prometheus",
+ "uid": "$datasource"
+ },
+ "expr": "count(kubecost_node_is_spot{job=~\"$job\"} == 1)"
+ }
+ ],
+ "title": "Spot Nodes Count",
+ "description": "Количество прерываемых (spot) нод.",
+ "type": "stat"
+ },
+ {
+ "datasource": {
+ "type": "datasource",
+ "uid": "-- Mixed --"
+ },
+ "fieldConfig": {
+ "defaults": {
+ "thresholds": {
+ "steps": [
+ {
+ "color": "green",
+ "value": 0
+ }
+ ]
+ },
+ "unit": "currencyRUB"
+ }
+ },
+ "gridPos": {
+ "h": 3,
+ "w": 4,
+ "x": 12,
+ "y": 31
+ },
+ "id": 23,
+ "options": {
+ "graphMode": "none",
+ "reduceOptions": {
+ "calcs": [
+ "lastNotNull"
+ ]
+ }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+ {
+ "datasource": {
+ "type": "prometheus",
+ "uid": "$datasource"
+ },
+ "expr": "sum(kubecost_cluster_management_cost{job=~\"$job\"}) * 730"
+ }
+ ],
+ "title": "Cluster Management Monthly",
+ "description": "Месячная плата за управление кластером (руб.).",
+ "type": "stat"
+ },
+ {
+ "datasource": {
+ "type": "datasource",
+ "uid": "-- Mixed --"
+ },
+ "fieldConfig": {
+ "defaults": {
+ "thresholds": {
+ "steps": [
+ {
+ "color": "green",
+ "value": 0
+ }
+ ]
+ },
+ "unit": "currencyRUB"
+ }
+ },
+ "gridPos": {
+ "h": 3,
+ "w": 4,
+ "x": 16,
+ "y": 31
+ },
+ "id": 24,
+ "options": {
+ "graphMode": "none",
+ "reduceOptions": {
+ "calcs": [
+ "lastNotNull"
+ ]
+ }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+ {
+ "datasource": {
+ "type": "prometheus",
+ "uid": "$datasource"
+ },
+ "expr": "sum(kubecost_load_balancer_cost{job=~\"$job\"})"
+ }
+ ],
+ "title": "LB Hourly Cost",
+ "description": "Почасовая стоимость Load Balancer (руб.).",
+ "type": "stat"
+ },
+ {
+ "datasource": {
+ "type": "datasource",
+ "uid": "-- Mixed --"
+ },
+ "fieldConfig": {
+ "defaults": {
+ "thresholds": {
+ "steps": [
+ {
+ "color": "green",
+ "value": 0
+ }
+ ]
+ },
+ "unit": "currencyRUB"
+ }
+ },
+ "gridPos": {
+ "h": 3,
+ "w": 4,
+ "x": 20,
+ "y": 31
+ },
+ "id": 25,
+ "options": {
+ "graphMode": "none",
+ "reduceOptions": {
+ "calcs": [
+ "lastNotNull"
+ ]
+ }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+ {
+ "datasource": {
+ "type": "prometheus",
+ "uid": "$datasource"
+ },
+ "expr": "sum(kubecost_load_balancer_cost{job=~\"$job\"}) * 730"
+ }
+ ],
+ "title": "LB Monthly Cost",
+ "description": "Месячная стоимость Load Balancer (руб.).",
+ "type": "stat"
  }
  ],
  "schemaVersion": 39,

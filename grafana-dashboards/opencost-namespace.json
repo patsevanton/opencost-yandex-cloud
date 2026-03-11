@@ -1074,6 +1074,64 @@
  "title": "Cost by PV",
  "description": "Круговая диаграмма: распределение месячных затрат по постоянным томам (PV).",
  "type": "piechart"
+ },
+ {
+ "collapsed": false,
+ "gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 },
+ "id": 20,
+ "title": "GPU & PVC allocation",
+ "description": "Аллокация GPU и PVC по подам (метрики OpenCost).",
+ "type": "row"
+ },
+ {
+ "datasource": { "type": "datasource", "uid": "-- Mixed --" },
+ "fieldConfig": {
+  "defaults": {
+   "thresholds": { "steps": [{ "color": "green", "value": null }] },
+   "unit": "short"
+  }
+ },
+ "gridPos": { "h": 3, "w": 6, "x": 0, "y": 43 },
+ "id": 21,
+ "options": {
+  "graphMode": "none",
+  "reduceOptions": { "calcs": ["lastNotNull"] }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+  {
+   "datasource": { "type": "prometheus", "uid": "$datasource" },
+   "expr": "sum(container_gpu_allocation{job=~\"$job\", namespace=~\"$namespace\"})"
+  }
+ ],
+ "title": "GPU allocation (total)",
+ "description": "Суммарная аллокация GPU по выбранным неймспейсам (шт.).",
+ "type": "stat"
+ },
+ {
+ "datasource": { "type": "datasource", "uid": "-- Mixed --" },
+ "fieldConfig": {
+  "defaults": {
+   "thresholds": { "steps": [{ "color": "green", "value": null }] },
+   "unit": "decbytes"
+  }
+ },
+ "gridPos": { "h": 3, "w": 6, "x": 6, "y": 43 },
+ "id": 22,
+ "options": {
+  "graphMode": "none",
+  "reduceOptions": { "calcs": ["lastNotNull"] }
+ },
+ "pluginVersion": "v11.1.0",
+ "targets": [
+  {
+   "datasource": { "type": "prometheus", "uid": "$datasource" },
+   "expr": "sum(pod_pvc_allocation{job=~\"$job\", namespace=~\"$namespace\"})"
+  }
+ ],
+ "title": "PVC allocation (bytes)",
+ "description": "Суммарная аллокация PVC по подам в выбранных неймспейсах (байты).",
+ "type": "stat"
  }
  ],
  "schemaVersion": 39,

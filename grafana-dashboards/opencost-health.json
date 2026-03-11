@@ -1,0 +1,206 @@
+{
+ "__inputs": [],
+ "__requires": [
+  {
+   "type": "grafana",
+   "id": "grafana",
+   "name": "Grafana",
+   "version": "10.4.2"
+  },
+  {
+   "type": "datasource",
+   "id": "prometheus",
+   "name": "Prometheus",
+   "version": "1.0.0"
+  }
+ ],
+ "annotations": {
+  "list": [
+   {
+    "builtIn": 1,
+    "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+    "enable": true,
+    "hide": true,
+    "name": "Annotations & Alerts",
+    "type": "dashboard"
+   }
+  ]
+ },
+ "editable": true,
+ "fiscalYearStartMonth": 0,
+ "graphTooltip": 0,
+ "id": null,
+ "links": [],
+ "description": "Метрики здоровья OpenCost: HTTP-запросы, время и размер ответа.",
+ "panels": [
+  {
+   "collapsed": false,
+   "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+   "id": 1,
+   "title": "HTTP requests",
+   "type": "row"
+  },
+  {
+   "datasource": { "type": "prometheus", "uid": "$datasource" },
+   "fieldConfig": {
+    "defaults": {
+     "color": { "mode": "palette-classic" },
+     "custom": {
+      "axisCenteredZero": false,
+      "drawStyle": "line",
+      "fillOpacity": 10,
+      "lineWidth": 1,
+      "pointSize": 5,
+      "showPoints": "never",
+      "stacking": { "group": "A", "mode": "none" }
+     },
+     "unit": "short"
+    }
+   },
+   "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+   "id": 2,
+   "options": {
+    "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+   },
+   "targets": [
+    {
+     "expr": "sum by (endpoint, method, status) (increase(kubecost_http_requests_total{job=~\"$job\"}[$__rate_interval]))",
+     "legendFormat": "{{ endpoint }} {{ method }} {{ status }}",
+     "refId": "A"
+    }
+   ],
+   "title": "HTTP requests rate (by endpoint, method, status)",
+   "type": "timeseries"
+  },
+  {
+   "datasource": { "type": "prometheus", "uid": "$datasource" },
+   "fieldConfig": {
+    "defaults": {
+     "color": { "mode": "palette-classic" },
+     "custom": {
+      "axisCenteredZero": false,
+      "drawStyle": "line",
+      "fillOpacity": 10,
+      "lineWidth": 1,
+      "pointSize": 5,
+      "showPoints": "never",
+      "stacking": { "group": "A", "mode": "none" }
+     },
+     "unit": "short"
+    }
+   },
+   "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+   "id": 3,
+   "options": {
+    "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+   },
+   "targets": [
+    {
+     "expr": "sum(increase(kubecost_http_requests_total{job=~\"$job\"}[$__rate_interval]))",
+     "legendFormat": "Total",
+     "refId": "A"
+    }
+   ],
+   "title": "HTTP requests rate (total)",
+   "type": "timeseries"
+  },
+  {
+   "collapsed": false,
+   "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+   "id": 4,
+   "title": "Response time & size",
+   "type": "row"
+  },
+  {
+   "datasource": { "type": "prometheus", "uid": "$datasource" },
+   "fieldConfig": {
+    "defaults": {
+     "color": { "mode": "palette-classic" },
+     "custom": {
+      "axisCenteredZero": false,
+      "drawStyle": "line",
+      "fillOpacity": 10,
+      "lineWidth": 1,
+      "pointSize": 5,
+      "showPoints": "never",
+      "stacking": { "group": "A", "mode": "none" }
+     },
+     "unit": "s"
+    }
+   },
+   "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+   "id": 5,
+   "options": {
+    "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+   },
+   "targets": [
+    {
+     "expr": "sum by (endpoint, method) (rate(kubecost_http_response_time_seconds_sum{job=~\"$job\"}[$__rate_interval])) / sum by (endpoint, method) (rate(kubecost_http_response_time_seconds_count{job=~\"$job\"}[$__rate_interval]))",
+     "legendFormat": "{{ endpoint }} {{ method }}",
+     "refId": "A"
+    }
+   ],
+   "title": "HTTP response time (avg by endpoint, method)",
+   "type": "timeseries"
+  },
+  {
+   "datasource": { "type": "prometheus", "uid": "$datasource" },
+   "fieldConfig": {
+    "defaults": {
+     "color": { "mode": "palette-classic" },
+     "custom": {
+      "axisCenteredZero": false,
+      "drawStyle": "line",
+      "fillOpacity": 10,
+      "lineWidth": 1,
+      "pointSize": 5,
+      "showPoints": "never",
+      "stacking": { "group": "A", "mode": "none" }
+     },
+     "unit": "decbytes"
+    }
+   },
+   "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+   "id": 6,
+   "options": {
+    "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }
+   },
+   "targets": [
+    {
+     "expr": "sum by (endpoint, method) (rate(kubecost_http_response_size_bytes_sum{job=~\"$job\"}[$__rate_interval])) / sum by (endpoint, method) (rate(kubecost_http_response_size_bytes_count{job=~\"$job\"}[$__rate_interval]))",
+     "legendFormat": "{{ endpoint }} {{ method }}",
+     "refId": "A"
+    }
+   ],
+   "title": "HTTP response size (avg bytes by endpoint, method)",
+   "type": "timeseries"
+  }
+ ],
+ "schemaVersion": 39,
+ "tags": ["opencost", "health"],
+ "templating": {
+  "list": [
+   {
+    "label": "Data source",
+    "name": "datasource",
+    "query": "prometheus",
+    "type": "datasource"
+   },
+   {
+    "datasource": { "type": "prometheus", "uid": "${datasource}" },
+    "label": "Job",
+    "name": "job",
+    "query": "label_values(opencost_build_info, job)",
+    "refresh": 2,
+    "sort": 1,
+    "type": "query"
+   }
+  ]
+ },
+ "time": { "from": "now-1h", "to": "now" },
+ "timezone": "utc",
+ "refresh": "1m",
+ "title": "OpenCost / Health",
+ "uid": "opencost-health",
+ "version": 1
+}
