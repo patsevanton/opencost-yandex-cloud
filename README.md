@@ -104,9 +104,9 @@ python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yam
 
 **Шаг 2 — найти цену за единицу в skus.md**
 
-В файле `skus.md` (таблица) нужно найти строку, где **name** совпадает с **Продуктом** из детализации, а **pricingUnit** — с **Ед. потребления** (в skus.md единицы вроде `core_hour`, `gbyte_hour`).
+В файле `skus.md` (таблица) нужно найти строку, которые подходят вам.
 
-Примеры соответствия (по скриншоту детализации и типичным SKU):
+Примеры соответствия:
 
 - **CPU** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU», ед. потребления `core*hour`. В skus.md ищем, например: `Regular VM computing resources, Intel Ice Lake, 100% vCPU` и `core_hour`. Цена за 1 core×час (руб.) × 730 = значение для `CPU`.
 - **RAM** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM», ед. `gbyte*hour`. В skus.md: `Regular VM computing resources, Intel Ice Lake, RAM` и `gbyte_hour`. Цена за 1 ГБ×час × 730 = значение для `RAM`.
