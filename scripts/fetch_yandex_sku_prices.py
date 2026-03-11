@@ -203,7 +203,7 @@ def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
     ram_candidates: list[tuple[float, str]] = []
     ram_preferred: list[tuple[float, str]] = []  # Regular VM, Intel Ice Lake RAM (не GPU PLATFORM V4)
     storage_candidates: list[tuple[float, str]] = []
-    storage_preferred: list[tuple[float, str]] = []  # SSD, не Cloud Desktop
+    storage_preferred: list[tuple[float, str]] = []  # HDD, не Cloud Desktop
 
     for sku in skus:
         unit = _pricing_unit(sku)
@@ -224,17 +224,17 @@ def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
             if "disk" in text or "диск" in text or "storage" in text and "ram" not in text:
                 if _is_vm_disk(text):
                     storage_candidates.append((price, name))
-                    if "ssd" in text and ("fast" in text or "network drive" in text):
+                    if "hdd" in text and ("standard" in text or "disk drive" in text):
                         storage_preferred.append((price, name))
             elif "ram" in text or "память" in text or "memory" in text or ("gb" in text and "disk" not in text and "диск" not in text):
                 ram_candidates.append((price, name))
                 if _is_compute_cloud_regular_vm(text) and "cvos" not in text and _is_plain_ram(text):
                     ram_preferred.append((price, name))
 
-        # Диск ВМ: приоритет SSD, не Cloud Desktop (_is_vm_disk уже исключает cloud desktop)
+        # Диск ВМ: приоритет HDD, не Cloud Desktop (_is_vm_disk уже исключает cloud desktop)
         if "gbyte" in unit and "hour" in unit and _is_vm_disk(text):
             storage_candidates.append((price, name))
-            if "ssd" in text and ("fast" in text or "network drive" in text):
+            if "hdd" in text and ("standard" in text or "disk drive" in text):
                 storage_preferred.append((price, name))
 
     def _min_positive_candidate(candidates: list[tuple[float, str]]) -> tuple[float, str] | None:

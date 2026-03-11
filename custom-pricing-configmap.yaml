@@ -18,4 +18,4 @@ data:
   # Источники: skus.txt (Billing API) + сверка с детализацией биллинга (последний час).
   CPU: "841.617"  # 1.1529 ₽/vCPU-час (Regular VM computing resources, Intel Ice Lake, 100% vCPU) * 730
   RAM: "224.402"  # 0.3074 ₽/ГБ-час (Regular VM computing resources, Intel Ice Lake, RAM) * 730
-  storage: "13.286"  # 0.0045 ₽/ГБ-час (Standard disk drive (HDD), dn2al287u6jr3a710u8g) * 730
+  storage: "3.285"  # 0.0045 ₽/ГБ-час (Standard disk drive (HDD), dn2al287u6jr3a710u8g) * 730
