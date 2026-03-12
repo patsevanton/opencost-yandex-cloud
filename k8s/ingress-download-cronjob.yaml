@@ -9,8 +9,8 @@ metadata:
   labels:
     app: ingress-download
 spec:
-  # каждые 30 минут — скачать файл в /dev/null (трафик есть, диск не растёт)
-  schedule: "*/30 * * * *"
+  # каждые 15 минут — скачать файл в /dev/null (трафик есть, диск не растёт)
+  schedule: "*/15 * * * *"
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 2
   concurrencyPolicy: Forbid
