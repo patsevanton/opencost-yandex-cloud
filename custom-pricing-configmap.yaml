@@ -18,4 +18,12 @@ data:
   # Источники: skus.md (Billing API) + сверка с детализацией биллинга (последний час).
   CPU: "841.617"  # 1.1529 ₽/vCPU-час (Regular VM computing resources, Intel Ice Lake, 100% vCPU) * 730
   RAM: "224.402"  # 0.3074 ₽/ГБ-час (Regular VM computing resources, Intel Ice Lake, RAM) * 730
-  storage: "3.285"  # 0.0045 ₽/ГБ-час (Standard disk drive (HDD), dn2al287u6jr3a710u8g) * 730
+  storage: "3.285"
+  # Сеть: стоимость за 1 GiB egress (₽/GiB). OpenCost не делит на 730.
+  # В Yandex Cloud: только исходящий трафик платный; zone/region часто бесплатно.
+  zoneNetworkEgress: "0"
+  regionNetworkEgress: "0"
+  internetNetworkEgress: "0.0659"  # 0.0659 ₽/GiB (Egress traffic — Internal Load Balancer)
+  # Load Balancer: почасовая ставка (₽/час). NLB — «Сетевой балансировщик нагрузки», sku dn237e0l3j9208rdb2q8.
+  # Правила маршрутизации и LBIngressDataCost (₽/GiB входящего) в custom pricing OpenCost отдельно не задаются.
+  loadBalancer: "0.2635"  # 0.2635 ₽/час (Public IP address of a load balancer)

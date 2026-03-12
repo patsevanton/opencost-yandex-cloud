@@ -1,0 +1,109 @@
+# HTTP-сервис с бесконечной отдачей для длительной загрузки через Ingress.
+# С ноутбука: curl -o /dev/null http://<INGRESS_HOST>/stream  (качать пока не прервёте)
+# Или: wget -O /dev/null http://<INGRESS_HOST>/stream
+# Генерирует egress-трафик пока идёт загрузка.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stream-server-script
+  labels:
+    app: stream-server
+data:
+  server.py: |
+    import socket
+    import sys
+    CHUNK = b"x" * 65536   # 64 KiB
+    def send_chunked(sock):
+        while True:
+            try:
+                sock.sendall(b"%x\r\n" % len(CHUNK) + CHUNK + b"\r\n")
+            except (BrokenPipeError, ConnectionResetError):
+                break
+    def handle(c, _):
+        c.recv(4096)
+        c.sendall(b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nTransfer-Encoding: chunked\r\n\r\n")
+        send_chunked(c)
+        c.close()
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("0.0.0.0", 8080))
+    server.listen(5)
+    while True:
+        handle(*server.accept())
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-server
+  labels:
+    app: stream-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stream-server
+  template:
+    metadata:
+      labels:
+        app: stream-server
+    spec:
+      containers:
+        - name: stream
+          image: python:3.12-alpine
+          command: ["python3", "/app/server.py"]
+          volumeMounts:
+            - name: script
+              mountPath: /app
+              readOnly: true
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "50m"
+            limits:
+              memory: "64Mi"
+              cpu: "200m"
+      volumes:
+        - name: script
+          configMap:
+            name: stream-server-script
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stream-server
+  labels:
+    app: stream-server
+spec:
+  type: ClusterIP
+  selector:
+    app: stream-server
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stream-server
+  labels:
+    app: stream-server
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: stream.apatsev.org.ru
+      http:
+        paths:
+          - path: /stream
+            pathType: Prefix
+            backend:
+              service:
+                name: stream-server
+                port:
+                  number: 80
+  # Вариант: один общий Ingress — добавьте path /stream в его spec.rules[].http.paths
