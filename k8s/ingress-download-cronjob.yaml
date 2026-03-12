@@ -32,6 +32,8 @@ spec:
                 - "0"
                 - -o
                 - /dev/null
+                - -w
+                - "ingress-download: скачано %{size_download} байт за %{time_total}s\n"
                 # wesnoth orig tarball (крупный файл для входящего трафика)
                 - "https://archive.ubuntu.com/ubuntu/pool/universe/w/wesnoth-1.18/wesnoth-1.18_1.18.4.orig.tar.bz2"
               resources:
