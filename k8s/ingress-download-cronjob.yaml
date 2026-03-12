@@ -1,0 +1,43 @@
+# Постоянный входящий трафик (ingress): CronJob периодически скачивает файл из интернета в кластер.
+# В детализации биллинга появятся строки «Входящий трафик из интернета» (и при необходимости egress).
+# URL можно сменить: подойдут тестовые файлы (10MB, 100MB, ISO) с speedtest-сервисов или зеркал.
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ingress-download
+  labels:
+    app: ingress-download
+spec:
+  # Каждые 30 минут — скачать файл в /dev/null (трафик есть, диск не растёт)
+  schedule: "*/30 * * * *"
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          labels:
+            app: ingress-download
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: download
+              image: curlimages/curl:latest
+              args:
+                - -sSL
+                - -o
+                - /dev/null
+                # 10 МБ — тестовый файл (предназначен для замеров скорости)
+                - "https://speed.hetzner.de/10MB.bin"
+              resources:
+                requests:
+                  memory: "16Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "32Mi"
+                  cpu: "200m"
+# Другие URL для смены (правьте args в контейнере): speed.hetzner.de/100MB.bin, speedtest.tele2.net/10MB.zip,
+# зеркало Яндекса: mirror.yandex.ru (например mini.iso или live-server ISO для большего объёма).
