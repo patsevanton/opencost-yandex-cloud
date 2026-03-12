@@ -23,7 +23,8 @@ data:
   # В Yandex Cloud: только исходящий трафик платный; zone/region часто бесплатно.
   zoneNetworkEgress: "0"
   regionNetworkEgress: "0"
-  internetNetworkEgress: "0.0659"  # 0.0659 ₽/GiB (Egress traffic — Internal Load Balancer)
+  internetNetworkEgress: "0.0659"  # 0.0659 ₽/GiB (тариф трафика через NLB, skus.md; VPC «Исходящий трафик» dn28ml7… = 0)
   # Load Balancer: почасовая ставка (₽/час). NLB — «Сетевой балансировщик нагрузки», sku dn237e0l3j9208rdb2q8.
+  # По CSV 2026-03-11: 20.55456/24 ≈ 0.8564; 2026-03-12: 10.3331865/12.065 ≈ 0.8566. Публичный IP LB — отдельная строка (≈0.2635 ₽/час).
   # Правила маршрутизации и LBIngressDataCost (₽/GiB входящего) в custom pricing OpenCost отдельно не задаются.
-  loadBalancer: "0.2635"  # 0.2635 ₽/час (Public IP address of a load balancer)
+  loadBalancer: "0.8565"  # NLB почасовая (сверено с 20260311-20260312.csv)
