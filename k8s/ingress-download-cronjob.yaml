@@ -27,11 +27,11 @@ spec:
             - name: download
               image: curlimages/curl:latest
               args:
-                - -sSLk
+                - -sS
                 - -o
                 - /dev/null
-                # 10 МБ — тестовый файл (предназначен для замеров скорости)
-                - "https://speedtest.tele2.net/10MB.zip"
+                # 10 МБ по HTTP — без редиректов и проверки SSL
+                - "http://proof.ovh.net/files/10Mb.dat"
               resources:
                 requests:
                   memory: "16Mi"
