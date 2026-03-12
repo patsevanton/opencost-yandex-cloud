@@ -31,7 +31,7 @@ spec:
                 - -o
                 - /dev/null
                 # 10 МБ — тестовый файл (предназначен для замеров скорости)
-                - "https://speed.hetzner.de/10MB.bin"
+                - "https://speedtest.tele2.net/10MB.zip"
               resources:
                 requests:
                   memory: "16Mi"
