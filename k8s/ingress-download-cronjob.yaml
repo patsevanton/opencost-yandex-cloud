@@ -27,7 +27,7 @@ spec:
             - name: download
               image: curlimages/curl:latest
               args:
-                - -sSL
+                - -sSLk
                 - -o
                 - /dev/null
                 # 10 МБ — тестовый файл (предназначен для замеров скорости)
