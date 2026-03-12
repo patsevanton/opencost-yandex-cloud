@@ -9,8 +9,8 @@ metadata:
   labels:
     app: ingress-download
 spec:
-  # Каждые 5 минут — скачать файл в /dev/null (трафик есть, диск не растёт)
-  schedule: "*/5 * * * *"
+  # каждые 30 минут — скачать файл в /dev/null (трафик есть, диск не растёт)
+  schedule: "*/30 * * * *"
   successfulJobsHistoryLimit: 2
   failedJobsHistoryLimit: 2
   concurrencyPolicy: Forbid
@@ -28,10 +28,12 @@ spec:
               image: curlimages/curl:latest
               args:
                 - -sS
+                - --max-redirs
+                - "0"
                 - -o
                 - /dev/null
-                # 10 МБ по HTTP — без редиректов и проверки SSL
-                - "http://proof.ovh.net/files/10Mb.dat"
+                # wesnoth orig tarball (крупный файл для входящего трафика)
+                - "https://archive.ubuntu.com/ubuntu/pool/universe/w/wesnoth-1.18/wesnoth-1.18_1.18.4.orig.tar.bz2"
               resources:
                 requests:
                   memory: "16Mi"
