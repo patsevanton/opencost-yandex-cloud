@@ -286,7 +286,6 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 
 Метрики здоровья сервиса OpenCost: число HTTP-запросов по endpoint, методу и статусу, среднее время и размер ответа.
 
----
 
 Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
 
