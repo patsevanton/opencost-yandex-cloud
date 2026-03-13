@@ -219,7 +219,7 @@ OpenCost не только читает метрики из VictoriaMetrics, н�
 |------|--------|----------|----------|
 | **opencost-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-overview.json) | OpenCost / Overview (Grafana.com ID 22208) | `opencost-overview.png` |
 | **opencost-namespace.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-namespace.json) | OpenCost / Namespace (Grafana.com ID 22252) | `opencost-namespace.png` |
-| **opencost-cost-reporter-basic-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-basic-overview.json) | Cost reporter — базовый обзор | `opencost-cost-reporter-basic.png` |
+| **opencost-cost-reporter-basic-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-basic-overview.json) | Cost reporter — базовый обзор | `opencost-cost-reporter-basic-1.png`, `opencost-cost-reporter-basic-2.png` |
 | **opencost-cost-reporter-detailed-overview.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-cost-reporter-detailed-overview.json) | Cost reporter — детальный обзор | `opencost-cost-reporter-detailed.png` |
 | **opencost-network-lb.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-network-lb.json) | OpenCost / Network & Load Balancer (сеть, NAT, LB) | `opencost-network-lb.png` |
 | **opencost-health.json** | [ссылка](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/grafana-dashboards/opencost-health.json) | OpenCost / Health (HTTP-метрики) | `opencost-health.png` |
@@ -264,9 +264,11 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 
 ### OpenCost Cost reporter — базовый обзор
 
-![Cost reporter — базовый обзор](images/grafana-dashboards/opencost-cost-reporter-basic.png)
+![Cost reporter — базовый обзор (1)](images/grafana-dashboards/opencost-cost-reporter-basic-1.png)
 
-**Файл скриншота:** `images/grafana-dashboards/opencost-cost-reporter-basic.png`
+![Cost reporter — базовый обзор (2)](images/grafana-dashboards/opencost-cost-reporter-basic-2.png)
+
+**Файлы скриншотов:** `images/grafana-dashboards/opencost-cost-reporter-basic-1.png`, `images/grafana-dashboards/opencost-cost-reporter-basic-2.png`
 
 **Метрики:** стоимость нод (`node_cpu_hourly_cost`, `node_ram_hourly_cost`, `node_total_hourly_cost`), аллокации (`container_cpu_allocation`, `container_memory_allocation_bytes`). Панели: Average Daily, Cluster Hour Cost, Estimative Monthly, Top 20 Namespaces/Containers/Pods, Hour Cost by Namespace/Container, Relative price, Standard Variation.
 
