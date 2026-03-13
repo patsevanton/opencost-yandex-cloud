@@ -274,9 +274,11 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 
 ### OpenCost Cost reporter — детальный обзор
 
-![Cost reporter — детальный обзор](images/grafana-dashboards/opencost-cost-reporter-detailed.png)
+![Cost reporter — детальный обзор (1)](images/grafana-dashboards/opencost-cost-reporter-detailed-1.png)
 
-**Файл скриншота:** `images/grafana-dashboards/opencost-cost-reporter-detailed.png`
+![Cost reporter — детальный обзор (2)](images/grafana-dashboards/opencost-cost-reporter-detailed-2.png)
+
+**Файлы скриншотов:** `images/grafana-dashboards/opencost-cost-reporter-detailed-1.png`, `images/grafana-dashboards/opencost-cost-reporter-detailed-2.png`
 
 **Метрики:** стоимость нод (`node_cpu_hourly_cost`, `node_ram_hourly_cost`, `node_total_hourly_cost`), аллокации (`container_cpu_allocation`, `container_memory_allocation_bytes`), хранилище (`pv_hourly_cost`). Панели: Top 20 by Namespace/Container, Hour Cost, Live Month/Day/Hour Price, Hour Price by App, AVG/Cluster Hour/Estimative Cluster Cost, PVCs (EBS).
 
