@@ -163,6 +163,8 @@ helm upgrade --install --wait \
   --values opencost-values.yaml
 ```
 
+Ссылка на исходный код: [opencost-values.yaml](https://github.com/patsevanton/opencost-yandex-cloud/blob/main/opencost-values.yaml).
+
 3. После установки OpenCost будет доступен по адресу http://opencost.apatsev.org.ru. Перед использованием подождите около 10 минут — за это время OpenCost соберёт необходимые метрики из системы.
 
 **Примечание (валюта в UI):** по умолчанию веб-интерфейс показывает USD. Переключить на RUB можно в самом UI, но при новом заходе снова будет USD — выбор не сохраняется. Валюта в UI **не** берётся из ConfigMap (ConfigMap задаёт только расчёты бэкенда); в текущих версиях OpenCost задать RUB по умолчанию через конфиг или Ingress нельзя. Чтобы сразу открывать в рублях, используйте ссылку с параметром: `http://opencost.apatsev.org.ru?currency=RUB`.
