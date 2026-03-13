@@ -1233,7 +1233,7 @@
  }
  ],
  "title": "LB Hourly Cost",
- "description": "Почасовая стоимость Load Balancer (руб.).",
+ "description": "Почасовая стоимость Load Balancer (руб.). При NLB за Ingress метрика может быть пустой (0): OpenCost учитывает только Service type=LoadBalancer.",
  "type": "stat"
  },
  {
@@ -1280,7 +1280,7 @@
  }
  ],
  "title": "LB Monthly Cost",
- "description": "Месячная стоимость Load Balancer (руб.).",
+ "description": "Месячная стоимость Load Balancer (руб.). При NLB за Ingress метрика может быть пустой (0): OpenCost учитывает только Service type=LoadBalancer.",
  "type": "stat"
  }
  ],

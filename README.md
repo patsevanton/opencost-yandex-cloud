@@ -58,15 +58,14 @@ Grafana доступна по адресу http://grafana.apatsev.org.ru (см. 
 
 Тарифы для OpenCost можно получать через **Billing API** Яндекса: метод [Sku.List](https://yandex.cloud/ru/docs/billing/api-ref/Sku/list) возвращает каталог SKU (тарифных единиц — цены за vCPU, RAM, диск и т.д.). 
 
-Скрипт `scripts/fetch_yandex_sku_prices.py` может вывести список всех SKU из каталога. Его можно запустить без клонирования репозитория — по прямой ссылке из интернета:
+Скрипт `scripts/fetch_yandex_sku_prices.py` может вывести список всех SKU из каталога. Его можно запустить по прямой ссылке из интернета:
 
 ```bash
 export IAM_TOKEN=$(yc iam create-token)
 
-# Запуск скрипта из интернета (без клонирования репозитория):
+# Запуск скрипта из интернета:
 curl -sSL https://raw.githubusercontent.com/patsevanton/opencost-yandex-cloud/main/scripts/fetch_yandex_sku_prices.py | python3 - --list-skus
 
-# Или после клонирования репозитория:
 # Вывести список всех SKU из каталога:
 python3 scripts/fetch_yandex_sku_prices.py --list-skus
 
@@ -264,7 +263,7 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 | `kubecost_network_nat_gateway_ingress_cost` | Стоимость ingress через NAT Gateway | namespace, service | ₽/GiB (при RUB) | **Network & LB:** NAT Gateway Ingress (₽/GiB). |
 | **Хранилище и LB** | | | | |
 | `pv_hourly_cost` | Часовая стоимость за 1 GiB PV | persistentvolume | ₽/час (при RUB) | **Overview:** Hourly/Daily/Monthly Cost, Monthly PV Cost, Cost by Resource, Persistent Volumes Monthly Cost. **Namespace:** Monthly PV Cost, PV Summary, Persistent Volumes Monthly Cost, Cost by PV. **Detailed:** Kubernetes EBS allocation price by day, PVCs (AWS EBS). |
-| `kubecost_load_balancer_cost` | Часовая стоимость Load Balancer | namespace, service | ₽/час (при RUB) | **Overview:** LB Hourly Cost, LB Monthly Cost. **Network & LB:** LB Hourly/Monthly Cost (total), Load Balancer cost by namespace / service. |
+| `kubecost_load_balancer_cost` | Часовая стоимость Load Balancer | namespace, service | ₽/час (при RUB) | **Overview:** LB Hourly Cost, LB Monthly Cost. **Network & LB:** LB Hourly/Monthly Cost (total), Load Balancer cost by namespace / service. *При использовании Ingress (NLB за ingress-nginx) OpenCost не обнаруживает LB через Service type=LoadBalancer — метрика может быть пустой; панели покажут 0.* |
 | **Кластер** | | | | |
 | `kubecost_cluster_management_cost` | Часовая плата за управление кластером | cluster | ₽/час (при RUB) | **Overview:** Cluster Management Monthly. |
 | `kubecost_cluster_info` | Информация о кластере | cluster, provider | info | — |
@@ -279,7 +278,7 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 
 Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
 
-Подключение OpenCost через MCP (для AI-ассистентов) описано в [mcp.md](mcp.md).
+Подключение OpenCost через MCP (для AI-ассистентов) описано в разделе [Подключение MCP OpenCost](#подключение-mcp-opencost) ниже.
 
 ## Биллинг Yandex Cloud и интеграция с OpenCost
 
@@ -329,3 +328,40 @@ Billing API v1 (gRPC/REST) содержит три сервиса:
 | OpenCost Plugin | External Costs (`/customCost/*`) | Плагин, читающий CSV из Object Storage или вызывающий Yandex Query HTTP API. Не требует модификации ядра OpenCost. Репозиторий: [opencost-plugins](https://github.com/opencost/opencost-plugins). |
 
 **Итог:** прямого API для получения списаний у Yandex Cloud нет — фактические расходы доступны только через CSV-экспорт в Object Storage. Наиболее реалистичный путь интеграции — **OpenCost Plugin**, читающий CSV-детализацию из Object Storage через S3-совместимый API.
+
+
+# Подключение MCP OpenCost
+
+В OpenCost встроен MCP-сервер (Model Context Protocol). Он предоставляет инструменты для запроса данных о стоимости кластера: AI-ассистенты (например, Cursor) могут через MCP получать cost-метрики и отвечать на вопросы о расходах.
+
+MCP-сервер по умолчанию включён в OpenCost и слушает порт **8081**.
+
+## Возможности MCP
+
+Через MCP доступны четыре инструмента:
+
+| Инструмент | Назначение |
+|------------|------------|
+| **get_allocation_costs** | Стоимость по аллокациям (namespace, deployment, pod, container и др.). Агрегация, фильтры, учёт idle/LB, накопление по времени. |
+| **get_asset_costs** | Стоимость по активам (ноды, диски, load balancer и т.п.) за заданное окно времени. |
+| **get_cloud_costs** | Облачные расходы: по провайдеру, региону, сервису, аккаунту, категории. Агрегация и фильтрация. |
+| **get_efficiency** | Эффективность ресурсов: CPU/память (usage/request), рекомендации по rightsizing и оценка потенциальной экономии. Опционально: `buffer_multiplier` (например 1.2 = 20% запас). |
+
+**Общие параметры:** `window` (временное окно, например `"7d"`, `"1d"`, `"30m"`) — обязателен везде. Для аллокаций и облака: `aggregate`, `filter`. Для аллокаций: `include_idle`, `share_idle`, `share_lb`, `step`, `resolution`, `accumulate`.
+
+## Настройка
+
+Добавьте сервер в настройки MCP (Cursor: настройки → MCP). Пример для доступа по вашему поддомену:
+
+```json
+{
+  "mcpServers": {
+    "opencost": {
+      "type": "http",
+      "url": "http://mcp-opencost.apatsev.org.ru"
+    }
+  }
+}
+```
+
+Документация: [OpenCost MCP](https://opencost.io/docs/integrations/mcp/).

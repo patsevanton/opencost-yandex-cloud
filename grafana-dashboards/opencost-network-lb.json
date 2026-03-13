@@ -186,6 +186,7 @@
     }
    ],
    "title": "LB Hourly Cost (total)",
+   "description": "При NLB за Ingress метрика может быть пустой (0): OpenCost учитывает только Service type=LoadBalancer.",
    "type": "stat"
   },
   {
@@ -209,6 +210,7 @@
     }
    ],
    "title": "LB Monthly Cost (total)",
+   "description": "При NLB за Ingress метрика может быть пустой (0): OpenCost учитывает только Service type=LoadBalancer.",
    "type": "stat"
   },
   {
@@ -234,6 +236,7 @@
     }
    ],
    "title": "Load Balancer cost by namespace / service",
+   "description": "При NLB за Ingress метрика может быть пустой (0): OpenCost учитывает только Service type=LoadBalancer.",
    "transformations": [
     { "id": "organize", "options": { "renameByName": { "namespace": "Namespace", "service": "Service", "Value": "Hourly (₽)" } } }
    ],
