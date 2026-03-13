@@ -87,7 +87,7 @@ python3 scripts/fetch_yandex_sku_prices.py
 python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 
 # Подставить цены из детализации CSV (где cost > 0): LB почасовая и, при наличии, egress; скрипт дополняет/перезаписывает значения:
-python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml --csv 20260311-20260331.csv
+python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml --csv 20260312-20260331.csv
 ```
 
 **Egress (zone/region/internet):** в ConfigMap задаются ключи `zoneNetworkEgress`, `regionNetworkEgress`, `internetNetworkEgress` (₽/GiB). В Yandex Cloud платным обычно бывает только исходящий трафик → заполняют `internetNetworkEgress` (из API или skus.md); zone/region можно оставить `"0"`.
