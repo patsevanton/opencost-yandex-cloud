@@ -205,7 +205,7 @@
    },
    "targets": [
     {
-     "expr": "sum(kubecost_load_balancer_cost{job=~\"$job\"}) * 730",
+     "expr": "sum(kubecost_load_balancer_cost{job=~\"$job\"}) * 720",
      "refId": "A"
     }
    ],

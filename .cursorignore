@@ -7,7 +7,6 @@ LICENSE
 ip-dns.tf
 locals.tf
 net.tf
-opencost-values.yaml
 terraform.tfstate
 terraform.tfstate.backup
 versions.tf

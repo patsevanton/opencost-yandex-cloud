@@ -33,13 +33,13 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
 BILLING_SKUS_URL = "https://billing.api.cloud.yandex.net/billing/v1/skus"
-HOURS_PER_MONTH = 730
+HOURS_PER_MONTH = 730  # OpenCost делит месячные ставки на 730; Yandex считает 720, но для точности расчётов используем 730
 
 # Соответствие sku_id из детализации биллинга → ключ ConfigMap (и тип: hour / gbyte).
 CSV_SKU_TO_CONFIG = {
-    "dn28ml7sjbb5v98jkuj3": ("internetNetworkEgress", "gbyte"),   # Исходящий трафик
-    "dn237e0l3j9208rdb2q8": ("loadBalancer", "hour"),            # NLB, почасовая
-    "dn2ivnqcdhjijlq11se2": ("LBIngressDataCost", "gbyte"),      # NLB входящий трафик (справка; в ConfigMap нет ключа)
+    "dn28ml7sjbb5v98jkuj3": ("internetNetworkEgress", "gbyte"),          # Исходящий трафик
+    "dn237e0l3j9208rdb2q8": ("firstFiveForwardingRulesCost", "hour"),    # NLB, почасовая
+    "dn2ivnqcdhjijlq11se2": ("LBIngressDataCost", "gbyte"),             # NLB входящий трафик
 }
 
 
@@ -275,10 +275,10 @@ def _is_lb_hourly_sku(text: str, unit: str) -> bool:
 
 def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
     """
-    Сопоставить SKU с полями ConfigMap: CPU, RAM, storage, egress, loadBalancer.
-    CPU/RAM/storage — месячная ставка (цена_за_час * 730).
-    internetNetworkEgress — ₽/GiB (Yandex: Исходящий трафик, за GB; OpenCost ожидает за GiB).
-    loadBalancer — ₽/час (Network Load Balancer).
+    Сопоставить SKU с полями ConfigMap: CPU, RAM, storage, egress, firstFiveForwardingRulesCost.
+    CPU/RAM/storage — месячная ставка (цена_за_час × 730).
+    internetNetworkEgress — ₽/GiB (Yandex: Исходящий трафик).
+    firstFiveForwardingRulesCost — ₽/час (Network Load Balancer).
     Возвращает (словарь ключ -> значение, словарь ключ -> название SKU).
     """
     result: dict[str, float] = {}
@@ -377,8 +377,8 @@ def match_skus(skus: list[dict]) -> tuple[dict[str, float], dict[str, str]]:
         chosen = _min_positive_candidate(lb_candidates)
         if chosen is not None:
             price, name = chosen
-            result["loadBalancer"] = round(price, 4)
-            names["loadBalancer"] = name
+            result["firstFiveForwardingRulesCost"] = round(price, 4)
+            names["firstFiveForwardingRulesCost"] = name
 
     return result, names
 
@@ -407,10 +407,9 @@ def update_configmap(
     prices: dict[str, float],
     names: dict[str, str] | None = None,
 ) -> None:
-    """Обновить в YAML значения CPU, RAM, storage, egress, loadBalancer."""
+    """Обновить в YAML значения CPU, RAM, storage, egress, LB."""
     names = names or {}
     text = configmap_path.read_text(encoding="utf-8")
-    # CPU, RAM, storage — месячные ставки (OpenCost делит на 730)
     for key in ("CPU", "RAM", "storage"):
         if key not in prices:
             continue
@@ -418,19 +417,29 @@ def update_configmap(
         hourly = val / HOURS_PER_MONTH
         unit = "vCPU-час" if key == "CPU" else "ГБ-час"
         name_part = f" ({names.get(key, '').strip()})" if names.get(key) else ""
-        comment = f"  # {hourly:.4f} ₽/{unit}{name_part} * 730"
+        comment = f"  # {hourly:.4f} ₽/{unit}{name_part} × {HOURS_PER_MONTH}"
         if key == "storage":
-            comment = ""
+            comment = f"  # {hourly:.6f} ₽/{unit}{name_part} × {HOURS_PER_MONTH}"
         text = _update_configmap_key(text, key, val, comment)
-    # Egress и LB — не месячные; единицы ₽/GiB и ₽/час
-    for key in ("zoneNetworkEgress", "regionNetworkEgress", "internetNetworkEgress", "loadBalancer"):
+    for key in ("zoneNetworkEgress", "regionNetworkEgress", "internetNetworkEgress"):
         if key not in prices:
             continue
         val = prices[key]
-        unit = "₽/GiB" if "Egress" in key else "₽/час"
         name_part = f" ({names.get(key, '').strip()})" if names.get(key) else ""
-        comment = f"  # {val} {unit}{name_part}"
+        comment = f"  # {val} ₽/GiB{name_part}"
         text = _update_configmap_key(text, key, val, comment)
+    for key in ("firstFiveForwardingRulesCost", "additionalForwardingRuleCost"):
+        if key not in prices:
+            continue
+        val = prices[key]
+        name_part = f" ({names.get(key, '').strip()})" if names.get(key) else ""
+        comment = f"  # {val} ₽/час{name_part}"
+        text = _update_configmap_key(text, key, val, comment)
+    if "LBIngressDataCost" in prices:
+        val = prices["LBIngressDataCost"]
+        name_part = f" ({names.get('LBIngressDataCost', '').strip()})" if names.get("LBIngressDataCost") else ""
+        comment = f"  # {val} ₽/GiB{name_part}"
+        text = _update_configmap_key(text, "LBIngressDataCost", val, comment)
     configmap_path.write_text(text, encoding="utf-8")
 
 
@@ -511,11 +520,7 @@ def main() -> int:
     if args.csv and args.csv.exists():
         csv_prices, csv_names = prices_from_billing_csv(args.csv)
         for key, val in csv_prices.items():
-            if key == "LBIngressDataCost":
-                print(f"Из CSV (справка, в ConfigMap нет ключа): {key} = {val:.6f} ₽/ГБ  — {csv_names.get(key, '')}", file=sys.stderr)
-                continue
-            # CSV перезаписывает или дополняет (для egress в CSV часто 0; для LB — есть)
-            prices[key] = round(val, 6) if "Egress" in key else round(val, 4)
+            prices[key] = round(val, 6) if "Egress" in key or key == "LBIngressDataCost" else round(val, 4)
             if csv_names.get(key):
                 names[key] = csv_names[key] + " (из CSV)"
     if not prices:
@@ -529,8 +534,10 @@ def main() -> int:
             print(f"  {k}: {v}  (мес, почасовая {v / HOURS_PER_MONTH:.4f}){name_info}")
         elif "Egress" in k:
             print(f"  {k}: {v}  (₽/GiB){name_info}")
-        elif k == "loadBalancer":
+        elif k in ("firstFiveForwardingRulesCost", "additionalForwardingRuleCost"):
             print(f"  {k}: {v}  (₽/час){name_info}")
+        elif k == "LBIngressDataCost":
+            print(f"  {k}: {v}  (₽/GiB){name_info}")
         else:
             print(f"  {k}: {v}{name_info}")
 

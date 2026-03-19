@@ -76,7 +76,7 @@ python3 scripts/fetch_yandex_sku_prices.py --list-skus --output skus.md
 
 ### Автоматическое создание custom-pricing-configmap.yaml
 
-Скрипт подставляет в ConfigMap цены для **CPU, RAM, storage** (из Billing API), а также **egress** (internetNetworkEgress) и **Load Balancer** (почасовая ставка). При необходимости можно подставить цены из детализации биллинга (CSV): для LB в CSV часто есть ненулевая стоимость, для egress в CSV обычно 0 — тогда берётся тариф из API.
+Скрипт подставляет в ConfigMap цены для **CPU, RAM, storage** (из Billing API), а также **egress** (internetNetworkEgress) и **Load Balancer** (firstFiveForwardingRulesCost, LBIngressDataCost). При необходимости можно подставить цены из детализации биллинга (CSV): для LB и egress в CSV часто есть ненулевая стоимость.
 
 ```bash
 # Показать подобранные цены (рубли), не менять файлы:
@@ -86,12 +86,15 @@ python3 scripts/fetch_yandex_sku_prices.py
 python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml
 
 # Подставить цены из детализации CSV (где cost > 0): LB почасовая и, при наличии, egress; скрипт дополняет/перезаписывает значения:
-python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml --csv 20260312-20260331.csv
+python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yaml --csv 20260318-20260319.csv
 ```
 
 **Egress (zone/region/internet):** в ConfigMap задаются ключи `zoneNetworkEgress`, `regionNetworkEgress`, `internetNetworkEgress` (₽/GiB). В Yandex Cloud платным обычно бывает только исходящий трафик → заполняют `internetNetworkEgress` (из API или skus.md); zone/region можно оставить `"0"`.
 
-**Load Balancer:** ключ `loadBalancer` — почасовая ставка (₽/час), соответствует «Сетевой балансировщик нагрузки» в детализации. Стоимость входящего трафика через LB (LBIngressDataCost, ₽/GiB) и правила маршрутизации в custom pricing OpenCost отдельными ключами не задаются; при запуске с `--csv` скрипт выводит рассчитанную по CSV цену за ГБ входящего трафика для справки.
+**Load Balancer:** OpenCost не поддерживает ключ `loadBalancer` — вместо него используются три отдельных ключа:
+- `firstFiveForwardingRulesCost` — почасовая ставка (₽/час) за NLB, соответствует «Сетевой балансировщик нагрузки» в детализации;
+- `additionalForwardingRuleCost` — ₽/час за каждое правило маршрутизации сверх 5;
+- `LBIngressDataCost` — стоимость входящего трафика через LB (₽/GiB).
 
 ### Как заполнить custom-pricing-configmap.yaml вручную по данным файла skus.md
 
@@ -104,10 +107,15 @@ python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yam
 | `CPU` | Цена за vCPU (месячная ставка) | core×час (core*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU |
 | `RAM` | Цена за ГБ RAM (месячная ставка) | ГБ×час (gbyte*hour) | Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM |
 | `storage` | Цена за ГБ диска (месячная ставка) | ГБ×час (gbyte*hour) | Стандартный диск (HDD) |
+| `currencyCode` | Код валюты (вместо `currency`) | — | `"RUB"` |
 | `zoneNetworkEgress` | Стоимость egress в зоне (₽/GiB) | — | Обычно 0 |
 | `regionNetworkEgress` | Стоимость egress в регионе (₽/GiB) | — | Обычно 0 |
 | `internetNetworkEgress` | Стоимость исходящего трафика в интернет (₽/GiB) | gbyte | Исходящий трафик (VPC) |
-| `loadBalancer` | Почасовая стоимость LB (₽/час) | hour | Network Load Balancer. Сетевой балансировщик нагрузки |
+| `firstFiveForwardingRulesCost` | Почасовая стоимость NLB (₽/час) | hour | Network Load Balancer. Сетевой балансировщик нагрузки |
+| `additionalForwardingRuleCost` | ₽/час за правило маршрутизации сверх 5 | hour | Обычно 0 |
+| `LBIngressDataCost` | Стоимость входящего трафика через LB (₽/GiB) | gbyte | NLB обработка входящего трафика |
+
+**Важно:** ключ `currency` не работает — OpenCost ожидает `currencyCode`. Ключ `loadBalancer` также не работает — нужны `firstFiveForwardingRulesCost`, `additionalForwardingRuleCost`, `LBIngressDataCost`. Неправильный ключ вызывает ошибку загрузки всего ConfigMap, и OpenCost возвращается к дефолтным ценам (GCP US).
 
 **Шаг 2 — найти цену за единицу в skus.md**
 
@@ -115,34 +123,34 @@ python3 scripts/fetch_yandex_sku_prices.py --update custom-pricing-configmap.yam
 
 Примеры соответствия:
 
-- **CPU** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU», ед. потребления `core*hour`. В skus.md ищем, например: `Regular VM computing resources, Intel Ice Lake, 100% vCPU` и `core_hour`. Цена за 1 core×час (руб.) × 730 = значение для `CPU`.
-- **RAM** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM», ед. `gbyte*hour`. В skus.md: `Regular VM computing resources, Intel Ice Lake, RAM` и `gbyte_hour`. Цена за 1 ГБ×час × 730 = значение для `RAM`.
-- **storage (HDD)** — продукт «Стандартный диск (HDD)», ед. `gbyte*hour`. В skus.md ищем `Standard disk drive (HDD)` или аналог с `gbyte_hour`; формула: цена за 1 ГБ×час × 730 = значение для `storage`.
+- **CPU** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, 100% vCPU», ед. потребления `core*hour`. В skus.md ищем, например: `Regular VM computing resources, Intel Ice Lake, 100% vCPU` и `core_hour`. Цена за 1 core×час (руб.) × 720 = значение для `CPU`.
+- **RAM** — продукт «Вычислительные ресурсы обычной BM, Intel Ice Lake, RAM», ед. `gbyte*hour`. В skus.md: `Regular VM computing resources, Intel Ice Lake, RAM` и `gbyte_hour`. Цена за 1 ГБ×час × 720 = значение для `RAM`.
+- **storage (HDD)** — продукт «Стандартный диск (HDD)», ед. `gbyte*hour`. В skus.md ищем `Standard disk drive (HDD)` или аналог с `gbyte_hour`; формула: цена за 1 ГБ×час × 720 = значение для `storage`.
 
 **Шаг 3 — формула для значений**
 
-OpenCost интерпретирует значения в ConfigMap как **месячные** ставки и сам делит на 730. Поэтому:
+OpenCost интерпретирует значения в ConfigMap как месячные ставки и переводит в почасовые делением на **730** (встроенное значение hoursPerMonth). Yandex Cloud считает месяц как 720 часов (30×24), но OpenCost всегда делит на 730. Поэтому для точных почасовых ставок:
 
 ```
 значение в ConfigMap = цена_за_единицу_из_skus_руб × 730
 ```
 
-Пример: в skus.md для Regular VM Intel Ice Lake 100% vCPU указано `1.1529 RUB` за `core_hour`. Тогда `CPU = "841.617"` (1.1529 × 730). Аналогично для RAM (0.3074 ₽/ГБ×час → 224.402) и storage (0.0045 ₽/ГБ×час для HDD → 3.285).
+Пример: в skus.md для Regular VM Intel Ice Lake 100% vCPU указано `1.1529 RUB` за `core_hour`. Тогда `CPU = "841.617"` (1.1529 × 730). Аналогично для RAM (0.3074 ₽/ГБ×час → 224.402) и storage (0.004453 ₽/ГБ×час для HDD → 3.251).
 
 **Проверка:** в детализации «Стоимость потребления» за период = (объём потребления в единицах) × (цена за единицу). Цена за единицу можно проверить: стоимость потребления / объём (например, 55.34 ₽ / 48 core×час ≈ 1.1529 ₽/core×час).
 
-При сверке с экспортированным CSV файлом детализации биллинга: **CPU** и **RAM** совпали с фактическими ставками (стоимость потребления / объём). Для **storage** (Стандартный диск HDD, sku `dn2al287u6jr3a710u8g`) наблюдается небольшое расхождение: в каталоге skus.md указано 0.0045 ₽/ГБ×час, по факту из CSV выходит около 0.00445 ₽/ГБ×час (в пределах округления). Для расчётов можно использовать либо значение из skus.md, либо уточнённое по детализации.
+При сверке с экспортированным CSV файлом детализации биллинга: **CPU** и **RAM** совпали с фактическими ставками (стоимость потребления / объём). Для **storage** (Стандартный диск HDD, sku `dn2al287u6jr3a710u8g`): по CSV выходит 0.004453 ₽/ГБ×час (пример: 2.137435 ₽ / 480 ГБ×час). Для расчётов используется значение из CSV-детализации.
 
 **Как обновить custom-pricing-configmap.yaml**
 
 - **Вручную:** откройте `custom-pricing-configmap.yaml`, в блоке `data:` замените значения ключей `CPU`, `RAM`, `storage` по формуле **цена_из_skus × 730** (округлить до 3 знаков после запятой). Пример для цен из таблицы выше:
   - `CPU: "841.617"`   (1.1529 × 730)
   - `RAM: "224.402"`   (0.3074 × 730)
-  - `storage: "3.285"` для HDD (0.0045 × 730)
-- **Egress и LB:** `internetNetworkEgress` — цена за 1 ГБ исходящего трафика (из skus.md или API; в детализации CSV часто cost=0). `loadBalancer` — почасовая ставка NLB: в CSV по продукту «Сетевой балансировщик нагрузки» при cost>0 можно взять **стоимость / объём (часы)** (например, 20.55456 / 24 ≈ 0.856 ₽/час).
+  - `storage: "3.251"` для HDD (0.004453 × 730)
+- **Egress и LB:** `internetNetworkEgress` — цена за 1 ГБ исходящего трафика (из skus.md или API). `firstFiveForwardingRulesCost` — почасовая ставка NLB: в CSV по продукту «Сетевой балансировщик нагрузки» при cost>0 можно взять **стоимость / объём (часы)** (например, 20.55456 / 24 ≈ 0.8564 ₽/час). `LBIngressDataCost` — стоимость входящего трафика через NLB (₽/GiB).
 
 
-Для **egress** и **loadBalancer** значения задаются в тех же единицах, что в биллинге: ₽/GiB и ₽/час (не умножать на 730). Остальные позиции детализации (публичный IP, Cloud DNS, мастер Kubernetes и т.д.) в custom pricing OpenCost отдельными ключами не задаются.
+Для **egress** и **LB** значения задаются в тех же единицах, что в биллинге: ₽/GiB и ₽/час (не умножать на 730). Остальные позиции детализации (публичный IP, Cloud DNS, мастер Kubernetes и т.д.) в custom pricing OpenCost отдельными ключами не задаются.
 
 ## Установка OpenCost
 
@@ -287,7 +295,7 @@ OpenCost отдаёт метрики на порту **9003** (`/metrics`). Ни
 Метрики здоровья сервиса OpenCost: число HTTP-запросов по endpoint, методу и статусу, среднее время и размер ответа.
 
 
-Примеры PromQL: месячная стоимость всех нод — `sum(node_total_hourly_cost) * 730`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
+Примеры PromQL: месячная стоимость всех нод (720 ч/мес, Yandex) — `sum(node_total_hourly_cost) * 720`; стоимость CPU+RAM по namespace — см. [документацию OpenCost](https://opencost.io/docs/integrations/metrics/).
 
 Подключение OpenCost через MCP (для AI-ассистентов) описано в разделе [Подключение MCP OpenCost](#подключение-mcp-opencost) ниже.
 
